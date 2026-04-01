@@ -1,0 +1,38 @@
+---
+description: Visual language, component behavior, and interaction patterns
+alwaysApply: true
+---
+
+# Design Rules
+
+## Component Library
+
+- Use shadcn/ui as the base component library. Extend existing components, never rebuild from scratch.
+- Icons: Lucide React only. 20px default size, 1.5px stroke weight.
+- Animations: Framer Motion only. Max 300ms for UI transitions. No animations on first paint.
+- Dropdowns and popovers: use Radix primitives via shadcn. Proper keyboard navigation. Dismiss on outside click.
+- Never use alert() or window.confirm(). Build proper modal dialogs using shadcn Dialog.
+
+## States
+
+- Every async state needs a skeleton loader. Never show blank screens or default spinners.
+- All interactive elements need hover, focus, active, and disabled states defined. No element should feel "dead."
+- Empty states are designed states. Every list, table, and feed needs a proper empty state with illustration and action.
+- Loading buttons: show a spinner inside the button during async actions. Disable the button while loading. Never allow double-submit.
+
+## Specifications
+
+- Cards: 12px border-radius, 1px border rgba(0,0,0,0.04). Buttons: min-height 40px, 14px font, 500 weight.
+- Spacing between sections: 64px. Between components: 24px. Between elements: 8px. Never deviate without asking.
+- Typography scale must be consistent: use only the defined font sizes. Never introduce a one-off size like 13px or 17px.
+- Responsive breakpoints: 640px (mobile), 768px (tablet), 1024px (desktop), 1280px (wide). Use Tailwind defaults only.
+
+## Patterns
+
+- Toast notifications for success/error states. Position: bottom-right. Auto-dismiss after 4 seconds. Use sonner.
+- Forms: use react-hook-form + zod. Inline validation on blur. Error messages below the field, not in toasts or alerts.
+- Modals must have a clear close action (X button + click outside + Escape key). Never trap the user.
+- Tables: sticky header, horizontal scroll on mobile, row hover highlight. Never break the table layout on small screens.
+- Images: always set width and height attributes. Use next/image with proper sizing. Never cause layout shift on load.
+- Dark mode must use semantic tokens, not hardcoded colors. If dark mode isn't ready, don't add it.
+- Scrollable areas must have visible scroll indicators. Never hide scrollbars on content that extends beyond the viewport.

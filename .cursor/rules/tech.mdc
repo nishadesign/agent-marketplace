@@ -1,0 +1,49 @@
+---
+description: Stack, frameworks, and coding conventions
+alwaysApply: true
+---
+
+# Tech Rules
+
+## Language & Framework
+
+- TypeScript strict mode. No 'any' types unless explicitly approved by me.
+- Use Next.js App Router with Server Components by default. Only add 'use client' when you need interactivity.
+- Always use Tailwind CSS utility classes. Never write custom CSS unless Tailwind genuinely can't do it.
+- Prefer Supabase for auth, database, and storage. Don't introduce alternative services without asking.
+
+## Code Organization
+
+- File naming: kebab-case for files, PascalCase for components. Group by feature, not by type.
+- Imports: absolute paths with @/ alias. Group by: external libs, internal modules, components, types. Separate with blank lines.
+- Functions should do one thing. If a function is longer than 30 lines, it probably needs to be split.
+
+## Data & Validation
+
+- Use Zod for all form validation and API response parsing. Never trust external data without validating.
+- Never use useEffect for data fetching. Use TanStack Query or server components.
+- State management: use React state and context for UI state. Use server state libraries (TanStack Query) for async data. Never mix them.
+
+## API & Security
+
+- API routes: use Next.js Route Handlers in app/api/. Always return proper HTTP status codes and typed JSON responses.
+- Database queries: never run raw SQL from the client. All database access goes through server-side API routes or server actions.
+- Use middleware for auth checks on protected routes. Never check auth inside individual page components.
+- All API endpoints must have rate limiting. Use upstash/ratelimit or similar. Never expose unprotected endpoints.
+- Environment variables: always use NEXT_PUBLIC_ prefix for client-side. Never hardcode API keys, URLs, or secrets.
+
+## Error Handling
+
+- Error handling: try/catch at the API boundary. User-facing errors as toast notifications. Never console.log and move on.
+
+## Assets
+
+- Images and static assets: store in public/ for static or use Supabase Storage for user-uploaded content. Never use base64 in the database.
+
+## Git
+
+- Git commits: conventional format (feat:, fix:, chore:). One logical change per commit. Never commit .env files.
+
+## Testing
+
+- Testing: write tests for every API route and critical user flow. Use Vitest for unit tests, Playwright for E2E. Don't skip tests to ship faster.

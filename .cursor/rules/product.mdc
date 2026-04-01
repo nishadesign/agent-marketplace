@@ -1,0 +1,266 @@
+---
+description: Product requirements, screen specs, and mock data for Patch
+alwaysApply: true
+---
+
+# Product Requirements — Patch
+
+## Overview
+
+Patch is an AI-native consumer marketplace for finding and booking trusted home service providers. Users discover, compare, and book real-world home services through a built-in AI assistant that interprets natural language requests and returns structured provider matches.
+
+- Product name: Patch
+- Tagline: Finds and books trusted home service
+- Category: Home services
+- Location: San Francisco (user location is pre-set, location access granted)
+- Brand: Minimalist, simple but premium. Not generic SaaS, not a dashboard template.
+- Platform: Mobile-first web app (390px primary viewport, responsive up)
+
+## Core Flow
+
+1. User describes what they need (natural language or browsing)
+2. Built-in agent interprets the request
+3. Marketplace returns 5 structured provider matches from 10 total providers
+4. User compares providers
+5. User approves booking
+6. User tracks the job and receives status updates
+
+## Navigation
+
+4-tab bottom navigation:
+
+1. Home — browse + agentic search
+2. Bookings — upcoming, active, past
+3. Messages — provider conversations + system updates
+4. Profile — personal info, addresses, preferences
+
+---
+
+## HERO SCREENS (High craft priority)
+
+These three screens carry the product. Invest the most design and interaction quality here.
+
+### Screen 1: Home
+
+The home screen has two modes: a browse experience and an agentic search.
+
+**Browse mode (default state):**
+
+The main surface is a consumer discovery experience — think Airbnb-style browsing. Scrollable, visual, category-driven.
+
+Content sections (top to bottom):
+- Greeting header with user's first name
+- Horizontal scrollable category chips (Plumbing, Cleaning, Electrical, Handyman, TV Mounting, Painting, Pest Control, Appliance Repair)
+- "Popular near you" — horizontal card row of top-rated providers
+- "Available today" — providers with same-day openings
+- "Emergency services" — urgent/24hr providers
+- Each section has its own provider cards
+
+**Agentic search (bottom sheet):**
+
+A persistent bottom sheet with a collapsed input bar at the bottom of the screen. The user can tap to expand or type a query.
+
+- Collapsed state: shows a text input hint — "Need a plumber tomorrow morning under $180"
+- Expanded state: full bottom sheet with the input field at top
+
+After the user submits a query:
+- The bottom sheet expands to show the "Your agent understood" section
+- Agent interpretation displayed as structured key-value pairs (service type, date/time, budget, location, special requirements)
+- If the agent misunderstood, the user taps to edit their original prompt and resubmit
+- Below the interpretation: filtered provider results (5 cards)
+- Filters available: Category, Date/Time, Budget, Rating, Distance, Licensed & insured
+
+**Provider cards include:**
+- Provider name
+- Star rating + review count
+- Earliest available slot
+- Pricing summary (e.g. "From $89" or "$150–$220")
+- Specialty tags (e.g. "Leak repair", "Emergency")
+- Distance (e.g. "2.4 mi")
+- Trust badges (Licensed, Insured, Background checked)
+- AI recommendation tag (one per result set): "Best match", "Fastest available", "Fits your budget"
+
+Cards must feel realistic — vary the data, don't template them.
+
+### Screen 2: Provider Detail
+
+Tapping a provider card opens a full provider profile page. This is the trust-building screen.
+
+**Hero section:**
+- Provider photo gallery (3-4 work photos, horizontal scroll)
+- Provider name
+- Star rating + review count
+- Short bio/summary (1-2 sentences)
+- Service type tags
+- Earliest available time
+- Primary CTA: "Book now" (sticky at bottom)
+
+**Sections:**
+1. Overview — what they do, years of experience, service area
+2. Services offered — list with descriptions (e.g. "Leak repair", "Faucet installation", "Drain cleaning")
+3. Pricing — structure clearly displayed (e.g. "$89 callout fee + parts", "Flat rate from $160")
+4. Availability — selectable time slots for next 5-7 days, realistic windows (e.g. "9–11 AM", "1–3 PM")
+5. Reviews — 3-5 realistic customer reviews with names, dates, ratings, and review text
+6. Policies — cancellation policy, licensed/insured/background-checked badges
+
+This screen must feel high-trust and high-clarity.
+
+### Screen 3: Booking Flow + Confirmation
+
+Multi-step booking after user selects a provider and time slot.
+
+**Booking steps:**
+1. Confirm service request — what the user needs, pulled from their original query or manual selection
+2. Pick a time slot — calendar + slot selector (pre-populated if user already selected one)
+3. Review & approve — full summary before confirming
+
+**Booking form fields:**
+- Service summary
+- Address (pre-filled from profile, editable)
+- Access instructions (optional)
+- Notes (optional)
+- Photo upload placeholder for the issue (optional)
+- Selected date/time
+- Price estimate (range or flat)
+- Cancellation policy summary
+
+**AI-native moment:**
+The agent suggests a time slot with reasoning:
+> "Tuesday 9 AM — earliest available, fits your budget, highest-rated provider for leak repair in your area."
+
+This is a suggestion, NOT a reservation. The user confirms.
+
+**Booking confirmation screen:**
+- Confirmed state with visual checkmark
+- Provider name + photo
+- Date/time
+- Address
+- Booking ID
+- "What happens next" summary (e.g. "Provider will confirm within 30 min. You'll get updates here.")
+- Actions: View booking, Message provider, Add to calendar
+
+The review and confirmation screens should feel calm, premium, and trustworthy.
+
+---
+
+## STANDARD SCREENS (Clean and functional)
+
+These screens use established patterns. They should be well-designed but don't need to be the hero moments.
+
+### Screen 4: Bookings
+
+Segmented tabs: Upcoming, Active, Past
+
+**Booking cards include:**
+- Provider name + avatar
+- Service type
+- Date/time
+- Status badge
+- Quick actions (message, reschedule)
+
+**Active bookings — richer status tracking:**
+Status progression: Confirmed → Provider en route → Arriving in X min → In progress → Completed
+
+Styled similarly to Uber/Instacart order tracking — visual timeline, live status.
+
+**Empty states:**
+- Upcoming: "No upcoming bookings. Need something fixed?" + CTA to search
+- Active: "Nothing in progress right now."
+- Past: "Your completed services will show up here."
+
+### Screen 5: Booking Detail / Status Tracker
+
+Full detail view for an active booking.
+
+Includes:
+- Booking summary (service, date, time, address)
+- Provider info (name, photo, rating)
+- ETA (when applicable)
+- Visual status timeline: Request submitted → Provider confirmed → On the way → In progress → Completed
+- Service notes
+- Contact / message provider CTA
+- Reschedule / cancel CTA
+- Price summary
+
+### Screen 6: Messages
+
+**List view:**
+- Provider conversations listed by recency
+- Each row: provider avatar, name, last message preview, timestamp, unread indicator
+
+**Conversation detail:**
+Three message types, visually distinct:
+- User messages — standard chat bubbles
+- Provider messages — standard chat bubbles, different alignment/color
+- System/agent messages — muted inline style (like a timestamp divider with text, NOT a chat bubble). Examples: "Your booking has been confirmed.", "Provider updated ETA to 10:42 AM."
+
+**Empty state:** "No conversations yet. Messages with providers will appear here."
+
+### Screen 7: Profile
+
+Sections:
+- Personal info (name, email, phone)
+- Saved addresses
+- Payment methods (display only, no payment processing)
+- Service preferences
+- Support
+- Become a service provider (CTA link, no destination needed)
+
+---
+
+## Mock Data Requirements
+
+### Providers (10 total)
+
+Create 10 realistic San Francisco-based home service providers across these categories: Plumbing, Cleaning, Electrical, Handyman, TV Mounting, Painting, Pest Control, Appliance Repair.
+
+Each provider needs:
+- Realistic business name (not "Provider 1")
+- Owner/tech first name
+- Star rating (range: 4.2–4.9)
+- Review count (range: 28–340)
+- Pricing structure (varies by provider — some flat rate, some hourly, some callout + parts)
+- Service area within SF
+- Distance from user (0.8 mi – 6.2 mi)
+- 3-5 services offered with descriptions
+- 3-5 time slots across next 5 days
+- 3-5 customer reviews with names, dates, text
+- Trust badges (Licensed, Insured, Background checked — not all providers have all three)
+- Specialties / tags
+
+### Primary user query
+
+Default demo query: "I have a leaking kitchen faucet, need someone tomorrow morning, budget under $200"
+
+Agent interpretation:
+- Service: Plumbing — Leak repair
+- When: Tomorrow morning (show actual date)
+- Budget: Under $200
+- Location: San Francisco (auto-detected)
+
+Returns 5 matching plumbing providers from the 10, ranked by relevance.
+
+### Bookings mock data
+
+- 1 upcoming booking (confirmed, scheduled for 2 days out)
+- 1 active booking (provider en route, arriving in 12 min)
+- 2 past bookings (completed)
+
+### Messages mock data
+
+- 1 conversation with the active booking's provider (3-4 messages + system updates)
+- 1 conversation with a past provider (short exchange)
+
+---
+
+## Out of Scope (MVP)
+
+- Provider-side experience (onboarding, management)
+- Payment processing
+- External agent API
+- Landing page (separate deliverable, later)
+- Provider comparison view (side-by-side)
+- Quick rebook from past bookings
+- Notifications / alert center
+- Dark mode
+- Desktop-optimized layouts (mobile-first only for now)
