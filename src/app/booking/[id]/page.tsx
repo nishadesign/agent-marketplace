@@ -215,25 +215,24 @@ export default function BookingDetailPage({
   const isCancelled = booking.status === "cancelled";
 
   return (
-    <div className="flex flex-1 flex-col pb-40">
-      {/* Header */}
-      <div className="sticky top-0 z-30 flex items-center gap-3 bg-background/95 px-5 pb-3 pt-[max(env(safe-area-inset-top),16px)] backdrop-blur-sm">
-        <button
-          onClick={() => router.back()}
-          className="flex h-10 w-10 items-center justify-center rounded-full transition-colors hover:bg-accent"
-        >
-          <ArrowLeft size={20} strokeWidth={1.5} />
-        </button>
-        <h1 className="text-base font-semibold tracking-tight">
-          Booking Details
-        </h1>
-      </div>
+    <div className="flex flex-1 flex-col px-5 pt-20 pb-40">
+      {/* Back button */}
+      <button
+        onClick={() => router.back()}
+        className="fixed left-4 top-[max(env(safe-area-inset-top),16px)] z-40 flex h-10 w-10 items-center justify-center rounded-full border border-white/60 bg-white/45 shadow-[0_2px_20px_rgba(0,0,0,0.06),inset_0_1px_0_rgba(255,255,255,0.7)] backdrop-blur-2xl transition-all hover:bg-white/60 hover:shadow-[0_2px_24px_rgba(0,0,0,0.1),inset_0_1px_0_rgba(255,255,255,0.8)]"
+      >
+        <ArrowLeft size={20} strokeWidth={1.5} />
+      </button>
+
+      <h1 className="text-2xl font-semibold tracking-tight">
+        Booking Details
+      </h1>
 
       <motion.div
         initial={{ opacity: 0, y: 12 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.25 }}
-        className="flex flex-col gap-6 px-5 pt-2"
+        className="mt-6 flex flex-col gap-6"
       >
         {/* Provider + Status */}
         <div className="rounded-2xl border border-border bg-background p-4">
@@ -344,28 +343,28 @@ export default function BookingDetailPage({
 
       {/* Sticky bottom actions */}
       <div className="fixed bottom-0 left-0 right-0 z-30 border-t border-border bg-background/95 backdrop-blur-sm">
-        <div className="mx-auto flex max-w-lg flex-col gap-2 px-5 pb-[max(env(safe-area-inset-bottom),16px)] pt-3">
+        <div className="mx-auto flex max-w-lg gap-2 px-5 pb-[max(env(safe-area-inset-bottom),16px)] pt-3">
+          {!isCompleted && !isCancelled && (
+            <button className="flex h-12 flex-1 items-center justify-center gap-2 rounded-2xl border border-border text-sm font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-foreground">
+              <X size={16} strokeWidth={1.5} />
+              Cancel
+            </button>
+          )}
+
           {!isCancelled && (
             <Link
               href={`/messages/${booking.providerId}`}
-              className="flex h-12 items-center justify-center gap-2 rounded-2xl bg-foreground text-sm font-medium text-background transition-opacity hover:opacity-90"
+              className="flex h-12 flex-1 items-center justify-center gap-2 rounded-2xl bg-foreground text-sm font-medium text-background transition-opacity hover:opacity-90"
             >
               <MessageCircle size={16} strokeWidth={1.5} />
-              Message Provider
+              Message
             </Link>
-          )}
-
-          {!isCompleted && !isCancelled && (
-            <button className="flex h-12 items-center justify-center gap-2 rounded-2xl border border-border text-sm font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-foreground">
-              <X size={16} strokeWidth={1.5} />
-              Cancel Booking
-            </button>
           )}
 
           {isCompleted && (
             <Link
               href={`/provider/${booking.providerId}`}
-              className="flex h-12 items-center justify-center gap-2 rounded-2xl border border-border text-sm font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+              className="flex h-12 flex-1 items-center justify-center gap-2 rounded-2xl border border-border text-sm font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
             >
               <RotateCcw size={15} strokeWidth={1.5} />
               Book Again

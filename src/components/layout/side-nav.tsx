@@ -12,6 +12,7 @@ import {
   MessageCircle,
   User,
   Sparkles,
+  SquarePen,
 } from "lucide-react";
 
 import { cn } from "@/lib/utils";
@@ -37,10 +38,20 @@ export function SideNav() {
       {/* Menu trigger */}
       <button
         onClick={() => setOpen(true)}
-        className="fixed left-4 top-[max(env(safe-area-inset-top),16px)] z-40 flex h-10 w-10 items-center justify-center rounded-full bg-background/80 shadow-sm backdrop-blur-sm transition-colors hover:bg-background"
+        className="fixed left-4 top-[max(env(safe-area-inset-top),16px)] z-[70] flex h-10 w-10 items-center justify-center rounded-full border border-white/60 bg-white/45 shadow-[0_2px_20px_rgba(0,0,0,0.06),inset_0_1px_0_rgba(255,255,255,0.7)] backdrop-blur-2xl transition-all hover:bg-white/60 hover:shadow-[0_2px_24px_rgba(0,0,0,0.1),inset_0_1px_0_rgba(255,255,255,0.8)]"
       >
         <Menu size={20} strokeWidth={1.5} />
       </button>
+
+      {/* New chat button — visible on all pages except home */}
+      {pathname !== "/" && (
+        <Link
+          href="/"
+          className="fixed right-4 top-[max(env(safe-area-inset-top),16px)] z-[70] flex h-10 w-10 items-center justify-center rounded-full border border-white/60 bg-white/45 shadow-[0_2px_20px_rgba(0,0,0,0.06),inset_0_1px_0_rgba(255,255,255,0.7)] backdrop-blur-2xl transition-all hover:bg-white/60 hover:shadow-[0_2px_24px_rgba(0,0,0,0.1),inset_0_1px_0_rgba(255,255,255,0.8)]"
+        >
+          <SquarePen size={18} strokeWidth={1.5} />
+        </Link>
+      )}
 
       <AnimatePresence>
         {open && (
