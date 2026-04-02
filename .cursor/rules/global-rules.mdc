@@ -43,3 +43,19 @@ I am a product designer who vibecodes. I understand design but I'm not a develop
 
 - After editing a file, if there's any architectural, core or universal decisions — update README and other product specifications. Do that without me asking.
 - Always use Context7 MCP when I need library/API documentation, code generation, setup or configuration steps without me having to explicitly ask.
+
+## Mobile-First
+
+- This is a mobile-first app. All layouts, interactions, and components must be designed for small screens first.
+- All bottom sheets, drawers, and overlays must support swipe-to-dismiss gestures (swipe down to close bottom sheets, swipe right to close left drawers).
+- Use Framer Motion's drag gestures (`drag`, `dragConstraints`, `onDragEnd`) for swipe interactions. Never rely on click/tap alone for dismissing overlays.
+- Touch targets must be at minimum 44×44px. Never make interactive elements smaller than this.
+- Use `dvh` units for viewport-dependent heights to account for mobile browser chrome and virtual keyboards.
+- Always test that scroll, swipe, and tap interactions don't conflict with each other.
+
+## Build Principle
+
+- Keep the code simple and easy to edit for a designer.
+- Avoid over-engineering.
+- Prefer straightforward components over abstractions.
+- Do not create unnecessary hooks, context providers, or utility layers unless clearly needed.
