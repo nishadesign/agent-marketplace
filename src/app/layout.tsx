@@ -1,13 +1,14 @@
 import type { Metadata, Viewport } from "next";
-import { Inter } from "next/font/google";
+import { VT323 } from "next/font/google";
 import { Toaster } from "sonner";
 
 import { SideNav } from "@/components/layout/side-nav";
 import { BookingsProvider } from "@/components/bookings-context";
 import "./globals.css";
 
-const inter = Inter({
+const vt323 = VT323({
   variable: "--font-sans",
+  weight: "400",
   subsets: ["latin"],
 });
 
@@ -21,7 +22,7 @@ export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
   maximumScale: 1,
-  themeColor: "#ffffff",
+  themeColor: "#008080",
 };
 
 export default function RootLayout({
@@ -30,14 +31,14 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={`${inter.variable} h-full antialiased`}>
-      <body className="flex min-h-full flex-col bg-background font-sans text-foreground">
+    <html lang="en" className={`${vt323.variable} h-full`}>
+      <body className="flex min-h-full flex-col font-sans text-foreground" style={{ backgroundColor: "#008080" }}>
         <BookingsProvider>
           <main className="mx-auto flex w-full max-w-lg flex-1 flex-col">
             {children}
           </main>
           <SideNav />
-          <Toaster position="bottom-right" richColors />
+          <Toaster position="bottom-right" />
         </BookingsProvider>
       </body>
     </html>
