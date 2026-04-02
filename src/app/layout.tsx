@@ -37,7 +37,7 @@ export default function RootLayout({
             {children}
           </main>
           <SideNav />
-          <Toaster position="bottom-right" richColors />
+          <Toaster position="top-center" richColors />
         </BookingsProvider>
       </body>
     </html>

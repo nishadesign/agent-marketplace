@@ -82,6 +82,17 @@ export type BookingStatus =
   | "completed"
   | "cancelled";
 
+export interface ReceiptItem {
+  label: string;
+  amount: string;
+}
+
+export interface Receipt {
+  items: ReceiptItem[];
+  total: string;
+  paidAt?: string;
+}
+
 export interface Booking {
   id: string;
   providerId: string;
@@ -97,6 +108,8 @@ export interface Booking {
   statusTimeline: StatusTimelineEntry[];
   eta?: string;
   notes?: string;
+  agentSummary?: string;
+  receipt?: Receipt;
 }
 
 export interface StatusTimelineEntry {
@@ -115,6 +128,7 @@ export interface Conversation {
   lastMessage: string;
   lastMessageTime: string;
   unread: boolean;
+  closed?: boolean;
   messages: Message[];
 }
 

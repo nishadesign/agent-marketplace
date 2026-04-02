@@ -1,7 +1,152 @@
-export default function ConversationPage() {
+"use client";
+
+import { useParams, useRouter, useSearchParams } from "next/navigation";
+import { motion } from "framer-motion";
+import { ArrowLeft, Send } from "lucide-react";
+import { useState, useEffect, useRef } from "react";
+
+import { getConversationById } from "@/data/messages";
+import type { Message } from "@/types";
+import { cn } from "@/lib/utils";
+
+function ChatBubble({ message }: { message: Message }) {
+  if (message.sender === "system") {
+    return (
+      <div className="flex justify-center py-2">
+        <p className="rounded-full bg-muted px-3 py-1 text-[11px] text-muted-foreground">
+          {message.text}
+        </p>
+      </div>
+    );
+  }
+
+  const isUser = message.sender === "user";
+
   return (
-    <div className="flex flex-1 flex-col px-4 pt-12">
-      <h1 className="text-2xl font-semibold tracking-tight">Conversation</h1>
+    <div
+      className={cn("flex flex-col gap-1", isUser ? "items-end" : "items-start")}
+    >
+      <div
+        className={cn(
+          "max-w-[80%] rounded-2xl px-3.5 py-2.5",
+          isUser
+            ? "rounded-br-md bg-foreground text-background"
+            : "rounded-bl-md bg-muted text-foreground"
+        )}
+      >
+        <p className="text-[13px] leading-relaxed">{message.text}</p>
+      </div>
+      <span className="px-1 text-[10px] text-muted-foreground/60">
+        {message.timestamp}
+      </span>
+    </div>
+  );
+}
+
+export default function ConversationPage() {
+  const params = useParams();
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const inputRef = useRef<HTMLInputElement>(null);
+  const [inputValue, setInputValue] = useState("");
+
+  const isNew = params.id === "new";
+  const conversation = isNew ? null : getConversationById(params.id as string);
+  const providerName =
+    conversation?.providerName ?? searchParams.get("providerName") ?? "";
+  const isClosed = conversation?.closed ?? false;
+  const messages = conversation?.messages ?? [];
+  const draft = searchParams.get("draft");
+
+  useEffect(() => {
+    if (draft) {
+      setInputValue(decodeURIComponent(draft));
+      setTimeout(() => inputRef.current?.focus(), 300);
+    }
+  }, [draft]);
+
+  if (!isNew && !conversation) {
+    return (
+      <div className="flex flex-1 items-center justify-center">
+        <p className="text-sm text-muted-foreground">Conversation not found.</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex h-[100dvh] flex-col bg-background">
+      {/* Header */}
+      <div className="flex items-center gap-3 border-b border-border px-4 pb-3 pt-14">
+        <button
+          onClick={() => router.back()}
+          className="flex h-9 w-9 items-center justify-center rounded-full transition-colors hover:bg-muted"
+        >
+          <ArrowLeft size={18} strokeWidth={1.5} />
+        </button>
+        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-muted text-xs font-semibold text-muted-foreground">
+          {providerName.charAt(0)}
+        </div>
+        <div className="min-w-0 flex-1">
+          <h2 className="truncate text-sm font-semibold text-foreground">
+            {providerName}
+          </h2>
+        </div>
+      </div>
+
+      {/* Messages */}
+      <div className="flex-1 overflow-y-auto px-4 py-4">
+        {messages.length > 0 ? (
+          <div className="space-y-3">
+            {messages.map((msg) => (
+              <motion.div
+                key={msg.id}
+                initial={{ opacity: 0, y: 4 }}
+                animate={{ opacity: 1, y: 0 }}
+              >
+                <ChatBubble message={msg} />
+              </motion.div>
+            ))}
+          </div>
+        ) : (
+          <div className="flex flex-1 items-center justify-center py-20">
+            <p className="text-xs text-muted-foreground">
+              Send your first message to {providerName}.
+            </p>
+          </div>
+        )}
+      </div>
+
+      {/* Input or closed state */}
+      {isClosed ? (
+        <div className="border-t border-border px-4 py-4 pb-8">
+          <p className="text-center text-xs text-muted-foreground">
+            Service has ended
+          </p>
+        </div>
+      ) : (
+        <div className="border-t border-border px-4 py-3 pb-8">
+          <div className="flex items-center gap-2">
+            <input
+              ref={inputRef}
+              type="text"
+              value={inputValue}
+              onChange={(e) => setInputValue(e.target.value)}
+              placeholder="Type a message..."
+              className="h-10 flex-1 rounded-full border border-border bg-muted/50 px-4 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-foreground/20"
+            />
+            <button
+              className={cn(
+                "flex h-10 w-10 shrink-0 items-center justify-center rounded-full transition-colors",
+                inputValue.trim()
+                  ? "bg-foreground text-background"
+                  : "bg-muted text-muted-foreground"
+              )}
+            >
+              <Send size={16} strokeWidth={1.5} />
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

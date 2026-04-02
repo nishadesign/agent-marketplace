@@ -21,7 +21,6 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
-import { Separator } from "@/components/ui/separator";
 
 const MENU_ITEMS = [
   { label: "Account Settings", icon: Settings },
@@ -53,7 +52,7 @@ export default function ProfilePage() {
   }
 
   return (
-    <div className="flex flex-1 flex-col px-4 pt-12">
+    <div className="flex flex-1 flex-col px-4 pt-20">
       <h1 className="text-2xl font-semibold tracking-tight">Profile</h1>
       <p className="mt-1 text-sm text-muted-foreground">
         Manage your account and preferences.
@@ -139,11 +138,8 @@ export default function ProfilePage() {
         </DialogContent>
       </Dialog>
 
-      {/* Separator */}
-      <Separator className="my-6" />
-
       {/* Menu options */}
-      <div className="flex flex-col gap-1">
+      <div className="mt-6 flex flex-col gap-1">
         {MENU_ITEMS.map((item) => (
           <button
             key={item.label}

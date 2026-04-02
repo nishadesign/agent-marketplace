@@ -79,6 +79,16 @@ export const bookings: Booking[] = [
       { label: "In progress", time: pastDate(5) + ", 9:05 AM", completed: true },
       { label: "Completed", time: pastDate(5) + ", 11:48 AM", completed: true },
     ],
+    agentSummary: "Maria from Sparkle Clean SF completed a full deep clean of your 2-bedroom apartment. All rooms were scrubbed down including kitchen appliances, bathroom tile and grout, baseboards, and interior windows. She noted light mold buildup under the bathroom sink which was treated and cleaned. Total time on-site was 2 hours 43 minutes.",
+    receipt: {
+      items: [
+        { label: "Deep clean — 2BR", amount: "$180.00" },
+        { label: "Kitchen appliance detail", amount: "$25.00" },
+        { label: "Mold treatment (bathroom)", amount: "$15.00" },
+      ],
+      total: "$220.00",
+      paidAt: pastDate(5) + ", 12:02 PM",
+    },
   },
   {
     id: "bk-004",
@@ -99,6 +109,17 @@ export const bookings: Booking[] = [
       { label: "In progress", time: pastDate(12) + ", 1:10 PM", completed: true },
       { label: "Completed", time: pastDate(12) + ", 4:15 PM", completed: true },
     ],
+    agentSummary: "Dan assembled a full-size IKEA PAX wardrobe with mirror doors and internal organizers, plus mounted two floating shelves (36\" each) on the bedroom wall with drywall anchors. All packaging was removed and disposed of. He flagged that one shelf bracket had a slight manufacturing defect and replaced it with a spare from his kit. Total time on-site was 3 hours 5 minutes.",
+    receipt: {
+      items: [
+        { label: "IKEA PAX wardrobe assembly", amount: "$140.00" },
+        { label: "Shelf mounting (×2)", amount: "$70.00" },
+        { label: "Hardware & anchors", amount: "$15.00" },
+        { label: "Packaging disposal", amount: "$15.00" },
+      ],
+      total: "$240.00",
+      paidAt: pastDate(12) + ", 4:22 PM",
+    },
   },
 ];
 
