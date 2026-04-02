@@ -3,42 +3,42 @@ import type { Conversation } from "@/types";
 export const conversations: Conversation[] = [
   {
     id: "conv-001",
-    providerId: "rapid-response-plumbing",
-    providerName: "Rapid Response Plumbing",
-    providerAvatar: "/providers/plumbing-12.jpg",
-    lastMessage: "On my way now, see you in about 12 minutes.",
-    lastMessageTime: "9:48 AM",
+    providerId: "golden-gate-plumbing",
+    providerName: "Golden Gate Home Plumbing",
+    providerAvatar: "/providers/plumbing-9.jpg",
+    lastMessage: "See you Thursday morning! I'll bring everything needed for the faucet replacement.",
+    lastMessageTime: "2:50 PM",
     unread: true,
     messages: [
       {
         id: "m1",
         sender: "system",
-        text: "Booking confirmed for today, 10:00 AM – 12:00 PM.",
-        timestamp: "8:45 AM",
+        text: "Booking confirmed for kitchen faucet replacement.",
+        timestamp: "Today, 2:15 PM",
       },
       {
         id: "m2",
         sender: "user",
-        text: "Hi Carlos, the leak is under the kitchen sink on the left side. Front door code is #4521.",
-        timestamp: "8:52 AM",
+        text: "Hi Marcus, the faucet is a single-handle Moen in the kitchen. Just wanted to give you a heads up.",
+        timestamp: "Today, 2:25 PM",
       },
       {
         id: "m3",
         sender: "provider",
-        text: "Got it, thanks for the details. I'll bring the right tools. Should be straightforward.",
-        timestamp: "9:10 AM",
+        text: "Thanks for letting me know! I'll bring compatible parts. Is the shut-off valve under the sink accessible?",
+        timestamp: "Today, 2:38 PM",
       },
       {
         id: "m4",
-        sender: "system",
-        text: "Provider is on the way.",
-        timestamp: "9:48 AM",
+        sender: "user",
+        text: "Yes, it's right under the sink. Easy to reach.",
+        timestamp: "Today, 2:42 PM",
       },
       {
         id: "m5",
         sender: "provider",
-        text: "On my way now, see you in about 12 minutes.",
-        timestamp: "9:48 AM",
+        text: "See you Thursday morning! I'll bring everything needed for the faucet replacement.",
+        timestamp: "Today, 2:50 PM",
       },
     ],
   },
@@ -50,6 +50,7 @@ export const conversations: Conversation[] = [
     lastMessage: "Thank you! Glad you liked it.",
     lastMessageTime: "Mar 27",
     unread: false,
+    closed: true,
     messages: [
       {
         id: "m6",
@@ -99,4 +100,10 @@ export const conversations: Conversation[] = [
 
 export function getConversationById(id: string): Conversation | undefined {
   return conversations.find((c) => c.id === id);
+}
+
+export function getConversationByProviderId(
+  providerId: string
+): Conversation | undefined {
+  return conversations.find((c) => c.providerId === providerId);
 }

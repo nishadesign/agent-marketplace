@@ -4,8 +4,6 @@ import Link from "next/link";
 import { motion } from "framer-motion";
 import {
   CalendarCheck,
-  Clock,
-  ChevronRight,
   Search,
   CircleCheck,
 } from "lucide-react";
@@ -14,81 +12,77 @@ import { useBookings } from "@/components/bookings-context";
 import type { Booking, StatusTimelineEntry } from "@/types";
 import { cn } from "@/lib/utils";
 
-function BookingCard({ booking }: { booking: Booking }) {
+function getRelativeDay(dateStr: string): string {
+  if (dateStr === "Today") return "Today";
+  const cleaned = dateStr.replace(/^Tomorrow,\s*/, "");
+  const parsed = new Date(cleaned + `, ${new Date().getFullYear()}`);
+  if (isNaN(parsed.getTime())) return dateStr;
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  parsed.setHours(0, 0, 0, 0);
+  const diffDays = Math.round(
+    (parsed.getTime() - today.getTime()) / (1000 * 60 * 60 * 24)
+  );
+  if (diffDays === 0) return "Today";
+  if (diffDays === 1) return "Tomorrow";
+  if (diffDays > 1) return `in ${diffDays} Days`;
+  return dateStr;
+}
+
+function BookingCard({
+  booking,
+  showTimeline = false,
+  showDateTag = true,
+}: {
+  booking: Booking;
+  showTimeline?: boolean;
+  showDateTag?: boolean;
+}) {
+  const relativeDay = getRelativeDay(booking.date);
+
   return (
     <Link href={`/booking/${booking.id}`} className="block">
       <motion.div
         initial={{ opacity: 0, y: 8 }}
         animate={{ opacity: 1, y: 0 }}
-        className="flex items-center gap-3 rounded-2xl border border-border bg-background p-4"
+        className="overflow-hidden rounded-2xl border border-border bg-background"
       >
-        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-muted text-sm font-semibold text-muted-foreground">
-          {booking.providerName.charAt(0)}
-        </div>
-
-        <div className="min-w-0 flex-1">
-          <h3 className="truncate text-sm font-semibold text-foreground">
-            {booking.providerName}
-          </h3>
-          <p className="mt-0.5 text-xs text-muted-foreground">
-            {booking.serviceSummary}
-          </p>
-          <div className="mt-1.5 flex items-center gap-1.5 text-xs text-muted-foreground">
-            <Clock size={12} strokeWidth={1.5} className="shrink-0" />
-            <span>
-              {booking.date} · {booking.time}
-            </span>
+        {/* Header */}
+        <div className="flex items-center gap-3 p-4">
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-muted text-sm font-semibold text-muted-foreground">
+            {booking.providerName.charAt(0)}
           </div>
+          <div className="min-w-0 flex-1">
+            <h3 className="truncate text-sm font-semibold text-foreground">
+              {booking.providerName}
+            </h3>
+            <p className="mt-0.5 text-xs text-muted-foreground">
+              {booking.serviceSummary}
+            </p>
+          </div>
+          {showDateTag && (
+            <span className="shrink-0 rounded-full bg-foreground/[0.06] px-3 py-1 text-[11px] font-medium text-foreground">
+              {relativeDay}
+            </span>
+          )}
         </div>
 
-        <ChevronRight
-          size={16}
-          strokeWidth={1.5}
-          className="shrink-0 text-muted-foreground/50"
-        />
+        {/* Vertical timeline */}
+        {showTimeline &&
+          booking.statusTimeline &&
+          booking.statusTimeline.length > 0 && (
+            <div className="border-t border-border px-4 py-4 pl-5">
+              {booking.statusTimeline.map((step, i) => (
+                <TimelineStep
+                  key={step.label}
+                  step={step}
+                  isLast={i === booking.statusTimeline.length - 1}
+                />
+              ))}
+            </div>
+          )}
       </motion.div>
     </Link>
-  );
-}
-
-function ServiceTracker({ booking }: { booking: Booking }) {
-  return (
-    <motion.div
-      initial={{ opacity: 0, y: 8 }}
-      animate={{ opacity: 1, y: 0 }}
-      className="overflow-hidden rounded-2xl border border-border bg-background"
-    >
-      {/* Provider header */}
-      <div className="flex items-center gap-3 border-b border-border p-4">
-        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-muted text-sm font-semibold text-muted-foreground">
-          {booking.providerName.charAt(0)}
-        </div>
-        <div className="min-w-0 flex-1">
-          <h3 className="truncate text-sm font-semibold text-foreground">
-            {booking.providerName}
-          </h3>
-          <p className="mt-0.5 text-xs text-muted-foreground">
-            {booking.serviceSummary}
-          </p>
-        </div>
-        {booking.eta && (
-          <span className="shrink-0 rounded-full bg-foreground px-3 py-1 text-[11px] font-medium text-background">
-            ETA {booking.eta}
-          </span>
-        )}
-      </div>
-
-      {/* Timeline */}
-      <div className="relative p-4 pl-5">
-        {booking.statusTimeline.map((step, i) => (
-          <TimelineStep
-            key={step.label}
-            step={step}
-            isLast={i === booking.statusTimeline.length - 1}
-          />
-        ))}
-      </div>
-    </motion.div>
   );
 }
 
@@ -104,31 +98,28 @@ function TimelineStep({
   const isFuture = !step.completed;
 
   return (
-    <div className="relative flex gap-4 pb-6 last:pb-0">
-      {/* Vertical line */}
+    <div className="relative flex gap-4 pb-5 last:pb-0">
       {!isLast && (
         <div
           className={cn(
-            "absolute left-[5px] top-[14px] w-[1.5px] bottom-0",
+            "absolute bottom-0 left-[5px] top-[14px] w-[1.5px]",
             isCompleted || isActive ? "bg-foreground/15" : "bg-border"
           )}
         />
       )}
 
-      {/* Dot */}
       <div className="relative z-10 flex shrink-0 pt-[2px]">
         {isActive ? (
-          <div className="flex h-[11px] w-[11px] items-center justify-center rounded-full bg-foreground" />
+          <div className="h-[11px] w-[11px] rounded-full bg-foreground" />
         ) : isCompleted ? (
           <div className="flex h-[11px] w-[11px] items-center justify-center rounded-full bg-emerald-500/80">
             <div className="h-[5px] w-[5px] rounded-full bg-emerald-500" />
           </div>
         ) : (
-          <div className="flex h-[11px] w-[11px] items-center justify-center rounded-full border-[1.5px] border-muted-foreground/25 bg-background" />
+          <div className="h-[11px] w-[11px] rounded-full border-[1.5px] border-muted-foreground/25 bg-background" />
         )}
       </div>
 
-      {/* Content */}
       <div className="min-w-0 flex-1 -mt-[1px]">
         {step.time && (
           <span className="text-[11px] text-muted-foreground">
@@ -140,7 +131,8 @@ function TimelineStep({
             "text-sm leading-snug",
             isActive && "font-semibold text-foreground",
             isCompleted && "text-foreground",
-            isFuture && "text-muted-foreground/50 uppercase text-[11px] font-medium tracking-wide mt-0.5"
+            isFuture &&
+              "mt-0.5 text-[11px] font-medium uppercase tracking-wide text-muted-foreground/50"
           )}
         >
           {step.label}
@@ -223,44 +215,26 @@ function EmptyPast() {
 }
 
 export default function BookingsPage() {
-  const { getUpcoming, getActive, getPast } = useBookings();
+  const { getUpcoming, getPast } = useBookings();
 
-  const active = getActive();
   const upcoming = getUpcoming();
   const past = getPast();
 
   return (
-    <div className="flex flex-1 flex-col px-5 pt-14 pb-20">
+    <div className="flex flex-1 flex-col px-5 pt-20 pb-20">
       <h1 className="text-2xl font-semibold tracking-tight">Bookings</h1>
       <p className="mt-1 text-sm text-muted-foreground">
         Your upcoming and past services.
       </p>
 
-      {/* Active — service tracker */}
-      {active.length > 0 && (
-        <div className="mt-8">
-          <SectionHeader title="Active" count={active.length} />
-          <div className="mt-3 space-y-3">
-            {active.map((booking) => (
-              <ServiceTracker key={booking.id} booking={booking} />
-            ))}
-          </div>
+      {/* Upcoming */}
+      {upcoming.length > 0 && (
+        <div className="mt-8 space-y-3">
+          {upcoming.map((booking) => (
+            <BookingCard key={booking.id} booking={booking} showTimeline />
+          ))}
         </div>
       )}
-
-      {/* Upcoming */}
-      <div className={active.length > 0 ? "mt-10" : "mt-8"}>
-        <SectionHeader title="Upcoming" count={upcoming.length} />
-        <div className="mt-3 space-y-3">
-          {upcoming.length === 0 ? (
-            <EmptyUpcoming />
-          ) : (
-            upcoming.map((booking) => (
-              <BookingCard key={booking.id} booking={booking} />
-            ))
-          )}
-        </div>
-      </div>
 
       {/* Past Bookings */}
       <div className="mt-10">
@@ -270,7 +244,7 @@ export default function BookingsPage() {
             <EmptyPast />
           ) : (
             past.map((booking) => (
-              <BookingCard key={booking.id} booking={booking} />
+              <BookingCard key={booking.id} booking={booking} showDateTag={false} />
             ))
           )}
         </div>

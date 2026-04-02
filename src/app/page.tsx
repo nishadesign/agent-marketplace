@@ -13,6 +13,7 @@ import {
   Check,
   Clock,
   CalendarCheck,
+  MessageSquare,
   X,
 } from "lucide-react";
 import Link from "next/link";
@@ -22,6 +23,7 @@ import { ProviderCard, COVER_IMAGES } from "@/components/home/provider-card";
 import { ProviderDetailSheet } from "@/components/home/provider-detail-sheet";
 import { useBookings } from "@/components/bookings-context";
 import { getSearchResults, getMoreResults } from "@/data/providers";
+import { getConversationByProviderId } from "@/data/messages";
 import type { Provider, AgentInterpretation, Booking } from "@/types";
 import { cn } from "@/lib/utils";
 
@@ -46,6 +48,20 @@ function getTomorrowLabel(): string {
   });
 }
 
+function getRelativeDay(dateStr: string): string {
+  const cleaned = dateStr.replace(/^Tomorrow,\s*/, "");
+  const parsed = new Date(cleaned + `, ${new Date().getFullYear()}`);
+  if (isNaN(parsed.getTime())) return dateStr;
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  parsed.setHours(0, 0, 0, 0);
+  const diffDays = Math.round((parsed.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+  if (diffDays === 0) return "Today";
+  if (diffDays === 1) return "Tomorrow";
+  if (diffDays > 1) return `in ${diffDays} Days`;
+  return dateStr;
+}
+
 const DEMO_INTERPRETATION: AgentInterpretation = {
   serviceType: "Plumbing — Leak repair",
   when: `Tomorrow morning (${getTomorrowLabel()})`,
@@ -57,6 +73,7 @@ export default function HomePage() {
   const router = useRouter();
   const { addBooking, getUpcoming } = useBookings();
   const upcomingBookings = getUpcoming();
+  const latestBooking = upcomingBookings[0] ?? null;
   const [view, setView] = useState<ViewState>("idle");
   const [query, setQuery] = useState("");
   const [submittedQuery, setSubmittedQuery] = useState("");
@@ -251,8 +268,8 @@ export default function HomePage() {
               </div>
             </div>
 
-            {/* Upcoming booking */}
-            {upcomingBookings.length > 0 && (
+            {/* Latest booking */}
+            {latestBooking && (
               <motion.div
                 initial={{ opacity: 0, y: 8 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -260,7 +277,7 @@ export default function HomePage() {
                 className="mt-5"
               >
                 <p className="mb-2 text-xs font-medium text-muted-foreground">
-                  Upcoming
+                  Bookings
                 </p>
                 <Link
                   href="/bookings"
@@ -271,13 +288,10 @@ export default function HomePage() {
                   </div>
                   <div className="min-w-0 flex-1">
                     <p className="truncate text-sm font-semibold text-foreground">
-                      {upcomingBookings[0].providerName}
+                      {latestBooking.providerName}
                     </p>
                     <p className="mt-0.5 truncate text-xs text-muted-foreground">
-                      {upcomingBookings[0].serviceSummary} · {upcomingBookings[0].date}
-                    </p>
-                    <p className="mt-0.5 text-xs text-muted-foreground">
-                      {upcomingBookings[0].time}
+                      {latestBooking.serviceSummary} · {getRelativeDay(latestBooking.date)}
                     </p>
                   </div>
                   <ChevronRight size={16} className="shrink-0 text-muted-foreground" />
@@ -654,12 +668,34 @@ export default function HomePage() {
                   </div>
                 </div>
 
-                <Link
-                  href="/bookings"
-                  className="flex h-10 w-full items-center justify-center rounded-xl bg-foreground text-sm font-semibold text-background transition-opacity hover:opacity-90"
-                >
-                  Go to bookings
-                </Link>
+                <div className="flex gap-2">
+                  <Link
+                    href="/bookings"
+                    className="flex h-10 flex-1 items-center justify-center gap-1.5 rounded-xl bg-foreground text-sm font-semibold text-background transition-opacity hover:opacity-90"
+                  >
+                    Go to bookings
+                  </Link>
+                  <button
+                    onClick={() => {
+                      const conv = getConversationByProviderId(
+                        confirmedBooking.providerId
+                      );
+                      const draft = encodeURIComponent(
+                        `Hi, I just booked ${confirmedBooking.serviceSummary.toLowerCase()} for ${confirmedBooking.date}. Looking forward to it!`
+                      );
+                      if (conv) {
+                        router.push(`/messages/${conv.id}?draft=${draft}`);
+                      } else {
+                        const name = encodeURIComponent(confirmedBooking.providerName);
+                        router.push(`/messages/new?providerName=${name}&draft=${draft}`);
+                      }
+                    }}
+                    className="flex h-10 flex-1 items-center justify-center gap-1.5 rounded-xl border border-border text-sm font-semibold text-foreground transition-colors hover:bg-accent/40"
+                  >
+                    <MessageSquare size={14} strokeWidth={1.5} />
+                    Message provider
+                  </button>
+                </div>
               </div>
             </motion.div>
           )}
