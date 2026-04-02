@@ -104,6 +104,7 @@ export interface StatusTimelineEntry {
   time?: string;
   completed: boolean;
   active?: boolean;
+  description?: string;
 }
 
 export interface Conversation {
