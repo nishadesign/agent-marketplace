@@ -10,6 +10,7 @@ import {
   MapPin,
   DollarSign,
   MessageCircle,
+  MessageSquareText,
   StickyNote,
   CalendarCheck,
   RotateCcw,
@@ -298,6 +299,13 @@ export default function BookingDetailPage({
               Details
             </h3>
             <div className="space-y-4">
+              {booking.userQuery && (
+                <InfoRow
+                  icon={MessageSquareText}
+                  label="Your Request"
+                  value={booking.userQuery}
+                />
+              )}
               <InfoRow
                 icon={CalendarCheck}
                 label="Date & Time"

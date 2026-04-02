@@ -32,6 +32,7 @@ export const bookings: Booking[] = [
       { label: "In progress", completed: false },
       { label: "Completed", completed: false },
     ],
+    userQuery: "My kitchen faucet is dripping nonstop, need it replaced this week",
   },
   {
     id: "bk-002",
@@ -59,6 +60,7 @@ export const bookings: Booking[] = [
       { label: "Completed", completed: false, description: "Service wrap-up & payment" },
     ],
     notes: "Front door code: #4521. Leak is under the kitchen sink, left side.",
+    userQuery: "Emergency — kitchen sink is leaking badly, need someone ASAP",
   },
   {
     id: "bk-003",
