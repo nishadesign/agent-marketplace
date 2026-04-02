@@ -348,11 +348,8 @@ export default function HomePage() {
           >
             <PatchLogo size={44} className="text-foreground" />
             <h1 className="mt-4 text-xl font-semibold tracking-tight">
-              What do you need help with?
+              Find a trusted fix with Patch
             </h1>
-            <p className="mt-1 text-sm text-muted-foreground">
-              Patch finds and books trusted home services
-            </p>
           </motion.div>
 
           <div className="mt-8 w-full">
