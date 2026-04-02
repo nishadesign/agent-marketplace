@@ -20,7 +20,7 @@ interface SlotInfo {
 
 interface BookingsContextValue {
   bookings: Booking[];
-  addBooking: (provider: Provider, slot: SlotInfo) => Booking;
+  addBooking: (provider: Provider, slot: SlotInfo, userQuery?: string) => Booking;
   getUpcoming: () => Booking[];
   getActive: () => Booking[];
   getPast: () => Booking[];
@@ -32,7 +32,7 @@ export function BookingsProvider({ children }: { children: ReactNode }) {
   const [bookings, setBookings] = useState<Booking[]>(mockBookings);
 
   const addBooking = useCallback(
-    (provider: Provider, slot: SlotInfo): Booking => {
+    (provider: Provider, slot: SlotInfo, userQuery?: string): Booking => {
       const id = `bk-${Date.now()}`;
       const now = new Date();
       const timeStr = now.toLocaleTimeString("en-US", {
@@ -74,6 +74,7 @@ export function BookingsProvider({ children }: { children: ReactNode }) {
           { label: "In progress", completed: false },
           { label: "Completed", completed: false },
         ],
+        ...(userQuery ? { userQuery } : {}),
       };
 
       setBookings((prev) => [newBooking, ...prev]);

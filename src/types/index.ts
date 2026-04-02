@@ -108,6 +108,7 @@ export interface Booking {
   statusTimeline: StatusTimelineEntry[];
   eta?: string;
   notes?: string;
+  userQuery?: string;
   agentSummary?: string;
   receipt?: Receipt;
 }
