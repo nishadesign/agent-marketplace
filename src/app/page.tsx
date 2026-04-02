@@ -3,14 +3,7 @@
 import { useState, useRef, useCallback, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
-import {
-  ArrowUp,
-  ArrowLeft,
-  Sparkles,
-  ChevronRight,
-  ChevronDown,
-  Pencil,
-} from "lucide-react";
+import { ArrowLeft, Pencil, ChevronDown, ChevronRight } from "lucide-react";
 import { toast } from "sonner";
 
 import { ProviderCard } from "@/components/home/provider-card";
@@ -53,19 +46,149 @@ const DEMO_INTERPRETATION: AgentInterpretation = {
   location: "San Francisco (auto-detected)",
 };
 
+/* ── Win2000 Title-bar close/min/max buttons ── */
+function WinTitleButtons({ onClose }: { onClose?: () => void }) {
+  return (
+    <div className="flex items-center gap-0.5 ml-1">
+      <button
+        onClick={onClose}
+        className="win-button flex items-center justify-center"
+        style={{ width: 16, height: 14, padding: 0, fontSize: 10, fontWeight: "bold" }}
+        title="Close"
+      >
+        ✕
+      </button>
+    </div>
+  );
+}
+
+/* ── Win2000 Window wrapper ── */
+function WinWindow({
+  title,
+  icon,
+  children,
+  onClose,
+  className,
+}: {
+  title: string;
+  icon?: React.ReactNode;
+  children: React.ReactNode;
+  onClose?: () => void;
+  className?: string;
+}) {
+  return (
+    <div className={cn("win-window flex flex-col", className)}>
+      {/* Title bar */}
+      <div className="win-titlebar">
+        {icon && <span className="text-sm">{icon}</span>}
+        <span className="flex-1 text-xs font-bold leading-none">{title}</span>
+        {/* min/max/close */}
+        <div className="flex gap-0.5">
+          <button className="win-button" style={{ width: 16, height: 14, padding: 0, fontSize: 9 }}>_</button>
+          <button className="win-button" style={{ width: 16, height: 14, padding: 0, fontSize: 9 }}>□</button>
+          <button className="win-button" style={{ width: 16, height: 14, padding: 0, fontSize: 9, fontWeight: "bold" }} onClick={onClose}>✕</button>
+        </div>
+      </div>
+      {/* Menu bar */}
+      <div
+        style={{
+          background: "#d4d0c8",
+          borderBottom: "1px solid #808080",
+          padding: "2px 4px",
+          display: "flex",
+          gap: 8,
+        }}
+      >
+        {["File", "Edit", "View", "Help"].map((m) => (
+          <span
+            key={m}
+            style={{ fontSize: 11, cursor: "default", padding: "1px 4px" }}
+            className="hover:bg-[#000080] hover:text-white"
+          >
+            {m}
+          </span>
+        ))}
+      </div>
+      {/* Body */}
+      <div className="flex-1 overflow-hidden p-3">{children}</div>
+    </div>
+  );
+}
+
+/* ── Win2000 Status Bar ── */
+function StatusBar({ text }: { text: string }) {
+  return (
+    <div
+      style={{
+        background: "#d4d0c8",
+        borderTop: "1px solid #808080",
+        display: "flex",
+        alignItems: "center",
+        padding: "2px 6px",
+        fontSize: 11,
+        gap: 4,
+      }}
+    >
+      <span
+        style={{
+          flex: 1,
+          borderRight: "1px solid #808080",
+          paddingRight: 8,
+        }}
+      >
+        {text}
+      </span>
+      <span>🌐 Internet zone</span>
+    </div>
+  );
+}
+
+/* ── Loading skeleton (Win2000 progress bar style) ── */
+function WinProgressBar() {
+  const [progress, setProgress] = useState(0);
+  useEffect(() => {
+    const t = setInterval(() => {
+      setProgress((p) => (p >= 100 ? 0 : p + 8));
+    }, 120);
+    return () => clearInterval(t);
+  }, []);
+  return (
+    <div style={{ background: "#ffffff", border: "2px inset #808080", height: 16, overflow: "hidden" }}>
+      <div
+        style={{
+          height: "100%",
+          width: `${progress}%`,
+          background: "repeating-linear-gradient(90deg,#000080 0px,#000080 8px,#316ac5 8px,#316ac5 16px)",
+          transition: "width 0.1s linear",
+        }}
+      />
+    </div>
+  );
+}
+
 export default function HomePage() {
   const router = useRouter();
   const { addBooking } = useBookings();
   const [view, setView] = useState<ViewState>("idle");
   const [query, setQuery] = useState("");
   const [submittedQuery, setSubmittedQuery] = useState("");
-  const [interpretation, setInterpretation] =
-    useState<AgentInterpretation | null>(null);
+  const [interpretation, setInterpretation] = useState<AgentInterpretation | null>(null);
   const [results, setResults] = useState<Provider[]>([]);
   const [showInterpretation, setShowInterpretation] = useState(false);
   const [selectedProvider, setSelectedProvider] = useState<Provider | null>(null);
   const [promptIndex, setPromptIndex] = useState(0);
+  const [time, setTime] = useState("");
   const inputRef = useRef<HTMLTextAreaElement>(null);
+
+  useEffect(() => {
+    const updateTime = () => {
+      const now = new Date();
+      setTime(now.toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" }));
+    };
+    updateTime();
+    const t = setInterval(updateTime, 1000);
+    return () => clearInterval(t);
+  }, []);
 
   useEffect(() => {
     if (view !== "idle") return;
@@ -91,12 +214,11 @@ export default function HomePage() {
     setQuery("");
     setView("loading");
     setShowInterpretation(false);
-
     setTimeout(() => {
       setInterpretation(DEMO_INTERPRETATION);
       setResults(getSearchResults());
       setView("results");
-    }, 1500);
+    }, 1800);
   }, [query]);
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -111,384 +233,433 @@ export default function HomePage() {
     setShowInterpretation(false);
   }, []);
 
-  // ── Idle: chat-first home ──
-  if (view === "idle") {
-    return (
-      <div className="flex flex-1 flex-col px-5 pb-20">
-        <div className="flex flex-1 flex-col items-center justify-center">
-          <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="flex flex-col items-center"
-          >
-            <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-foreground">
-              <Sparkles size={22} className="text-background" />
-            </div>
-            <h1 className="mt-4 text-xl font-semibold tracking-tight">
-              What do you need help with?
-            </h1>
-            <p className="mt-1 text-sm text-muted-foreground">
-              Patch finds and books trusted home services
-            </p>
-          </motion.div>
+  /* ── DESKTOP (teal background) wrapper ── */
+  return (
+    <div
+      className="flex flex-1 flex-col"
+      style={{ background: "#008080", minHeight: "100vh" }}
+    >
+      {/* ── Desktop area ── */}
+      <div className="flex flex-1 flex-col items-center justify-start pt-4 px-2 pb-10">
 
-          <div className="mt-8 w-full">
-            {/* Input with animated border */}
-            <div className="group relative">
-              <div className="pointer-events-none absolute -inset-[1.5px] rounded-[18px] opacity-60 blur-[1px] transition-opacity group-focus-within:opacity-100">
+        {/* Patch main window */}
+        {view === "idle" && (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.97 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="w-full max-w-md"
+          >
+            <WinWindow title="Patch Home Services — Find &amp; Book" icon="🏠">
+              <div className="space-y-3">
+                {/* Hero banner */}
                 <div
-                  className="h-full w-full rounded-[18px]"
                   style={{
-                    background:
-                      "conic-gradient(from var(--border-angle), #e2e8f0, #6366f1, #a855f7, #ec4899, #6366f1, #e2e8f0)",
-                    animation: "border-rotate 4s linear infinite",
+                    background: "linear-gradient(to right, #000080, #1084d0)",
+                    padding: "10px 12px",
+                    color: "#ffffff",
+                    fontSize: 14,
+                    letterSpacing: 1,
                   }}
-                />
-              </div>
-              <div className="relative rounded-2xl bg-background p-3">
-                <textarea
-                  ref={inputRef}
-                  value={query}
-                  onChange={(e) => setQuery(e.target.value)}
-                  onKeyDown={handleKeyDown}
-                  rows={2}
-                  className="w-full resize-none bg-transparent text-sm leading-relaxed text-foreground placeholder:text-transparent focus:outline-none"
-                  placeholder={ROTATING_PROMPTS[promptIndex]}
-                />
-                {/* Animated placeholder when empty */}
-                {!query && (
-                  <div className="pointer-events-none absolute left-3 top-3">
-                    <AnimatePresence mode="wait">
-                      <motion.span
-                        key={promptIndex}
-                        initial={{ opacity: 0, y: 6 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, y: -6 }}
-                        transition={{ duration: 0.3 }}
-                        className="text-sm text-muted-foreground"
-                      >
-                        {ROTATING_PROMPTS[promptIndex]}
-                      </motion.span>
-                    </AnimatePresence>
+                >
+                  <div style={{ fontSize: 18, fontWeight: "bold" }}>🔧 PATCH v2.0</div>
+                  <div style={{ fontSize: 11, opacity: 0.85 }}>Trusted Home Services · San Francisco</div>
+                </div>
+
+                {/* Info bar */}
+                <div
+                  style={{
+                    background: "#ece9d8",
+                    border: "2px inset #808080",
+                    padding: "4px 8px",
+                    fontSize: 11,
+                    color: "#000080",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 6,
+                  }}
+                >
+                  <span>ℹ️</span>
+                  <span>Describe what you need and Patch will find the best providers.</span>
+                </div>
+
+                {/* Query input panel */}
+                <div>
+                  <label style={{ fontSize: 11, display: "block", marginBottom: 3 }}>
+                    Search Request:
+                  </label>
+                  <div style={{ position: "relative" }}>
+                    <textarea
+                      ref={inputRef}
+                      value={query}
+                      onChange={(e) => setQuery(e.target.value)}
+                      onKeyDown={handleKeyDown}
+                      rows={3}
+                      className="win-input w-full"
+                      style={{ resize: "none", width: "100%", fontSize: 13 }}
+                      placeholder={ROTATING_PROMPTS[promptIndex]}
+                    />
                   </div>
-                )}
-                <div className="flex justify-end">
+                </div>
+
+                {/* Buttons row */}
+                <div style={{ display: "flex", gap: 8, justifyContent: "flex-end" }}>
                   <button
+                    className="win-button"
+                    onClick={() => setQuery("")}
+                  >
+                    Clear
+                  </button>
+                  <button
+                    className="win-button"
                     onClick={handleSubmit}
                     disabled={!query.trim()}
-                    className={cn(
-                      "flex h-8 w-8 items-center justify-center rounded-full transition-colors",
-                      query.trim()
-                        ? "bg-foreground text-background"
-                        : "bg-muted text-muted-foreground"
-                    )}
+                    style={{ minWidth: 80 }}
                   >
-                    <ArrowUp size={16} strokeWidth={2} />
+                    🔍 Search
                   </button>
                 </div>
-              </div>
-            </div>
 
-            {/* Suggestion prompts */}
-            <div className="mt-5 space-y-2">
-              <p className="text-xs font-medium text-muted-foreground">
-                Try asking
-              </p>
-              {SUGGESTION_PROMPTS.map((suggestion) => (
-                <button
-                  key={suggestion}
-                  onClick={() => {
-                    setQuery(suggestion);
-                    setTimeout(() => inputRef.current?.focus(), 50);
+                {/* Suggestions group box */}
+                <fieldset
+                  style={{
+                    border: "2px groove #808080",
+                    padding: "8px 10px",
+                    marginTop: 4,
                   }}
-                  className="block w-full rounded-xl border border-border px-3.5 py-2.5 text-left text-[13px] text-foreground transition-colors hover:bg-accent/50"
                 >
-                  {suggestion}
-                </button>
-              ))}
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  // ── Loading / Results: full-screen chat ──
-  return (
-    <div className="fixed inset-0 z-[60] mx-auto flex w-full max-w-lg flex-col bg-background">
-      {/* Header */}
-      <div className="shrink-0 px-5 pt-14 pb-2">
-        <div className="flex items-center gap-2">
-          <button
-            onClick={handleReset}
-            className="flex h-8 w-8 items-center justify-center rounded-full hover:bg-accent"
-          >
-            <ArrowLeft size={18} />
-          </button>
-          <span className="text-sm font-semibold">Ask Patch</span>
-        </div>
-      </div>
-
-      {/* Scrollable chat content */}
-      <div
-        className="flex-1 overflow-y-auto overscroll-contain px-5 pb-4"
-        style={{ WebkitOverflowScrolling: "touch" }}
-      >
-        <div className="space-y-4">
-          {/* User query bubble */}
-          <div className="flex justify-end">
-            <div className="max-w-[85%] rounded-2xl rounded-br-md bg-foreground px-4 py-2.5">
-              <p className="text-sm leading-relaxed text-background">
-                {submittedQuery}
-              </p>
-            </div>
-          </div>
-
-          {/* Agent response */}
-          <div className="flex gap-2.5">
-            <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-foreground">
-              <Sparkles size={12} className="text-background" />
-            </div>
-
-            <div className="flex-1 space-y-3">
-              {view === "loading" && (
-                <div className="space-y-2 pt-1">
-                  <div className="flex items-center gap-2">
-                    <motion.div
-                      animate={{ rotate: 360 }}
-                      transition={{
-                        repeat: Infinity,
-                        duration: 1.5,
-                        ease: "linear",
-                      }}
-                    >
-                      <Sparkles
-                        size={14}
-                        className="text-muted-foreground"
-                      />
-                    </motion.div>
-                    <p className="text-sm font-medium text-foreground">
-                      Finding the best matches...
-                    </p>
-                  </div>
-                  <p className="text-xs text-muted-foreground">
-                    Checking availability, pricing, and reviews
-                  </p>
-                  <div className="mt-3 space-y-2">
-                    {[1, 2, 3].map((i) => (
-                      <motion.div
-                        key={i}
-                        initial={{ opacity: 0.4 }}
-                        animate={{ opacity: [0.4, 0.7, 0.4] }}
-                        transition={{
-                          repeat: Infinity,
-                          duration: 1.5,
-                          delay: i * 0.2,
+                  <legend style={{ fontSize: 11, padding: "0 4px" }}>💡 Quick Searches</legend>
+                  <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+                    {SUGGESTION_PROMPTS.map((s) => (
+                      <button
+                        key={s}
+                        className="win-button"
+                        style={{ textAlign: "left", width: "100%", padding: "4px 8px" }}
+                        onClick={() => {
+                          setQuery(s);
+                          setTimeout(() => inputRef.current?.focus(), 50);
                         }}
-                        className="h-16 rounded-xl bg-accent/60"
-                      />
+                      >
+                        ▶ {s}
+                      </button>
                     ))}
                   </div>
+                </fieldset>
+              </div>
+            </WinWindow>
+            <StatusBar text="Ready" />
+          </motion.div>
+        )}
+
+        {/* ── Loading / Results window ── */}
+        {(view === "loading" || view === "results") && (
+          <div className="w-full max-w-md flex flex-col" style={{ minHeight: "80vh" }}>
+            <WinWindow
+              title={`Patch Search — ${submittedQuery.slice(0, 40)}${submittedQuery.length > 40 ? "…" : ""}`}
+              icon="🔍"
+              onClose={handleReset}
+              className="flex-1"
+            >
+              <div className="overflow-y-auto" style={{ maxHeight: "70vh" }}>
+
+                {/* User query display */}
+                <div
+                  style={{
+                    background: "#ece9d8",
+                    border: "2px inset #808080",
+                    padding: "6px 8px",
+                    fontSize: 11,
+                    marginBottom: 8,
+                    display: "flex",
+                    alignItems: "flex-start",
+                    gap: 6,
+                  }}
+                >
+                  <span>👤</span>
+                  <div>
+                    <div style={{ fontWeight: "bold", fontSize: 10, color: "#808080", marginBottom: 2 }}>
+                      USER QUERY:
+                    </div>
+                    <div style={{ color: "#000080" }}>{submittedQuery}</div>
+                  </div>
                 </div>
-              )}
 
-              {view === "results" && interpretation && (
-                <div className="space-y-4">
-                  <p className="text-sm leading-relaxed text-foreground">
-                    I found{" "}
-                    <span className="font-semibold">
-                      {results.length} providers
-                    </span>{" "}
-                    that match what you&apos;re looking for.
-                  </p>
-
-                  {/* Collapsible interpretation */}
-                  <div className="rounded-xl border border-border">
+                {/* Loading state */}
+                {view === "loading" && (
+                  <div style={{ padding: "8px 0" }}>
                     <div
-                      role="button"
-                      tabIndex={0}
-                      onClick={() =>
-                        setShowInterpretation(!showInterpretation)
-                      }
-                      onKeyDown={(e) => {
-                        if (e.key === "Enter" || e.key === " ") {
-                          e.preventDefault();
-                          setShowInterpretation(!showInterpretation);
-                        }
+                      style={{
+                        background: "#d4d0c8",
+                        border: "2px inset #808080",
+                        padding: 12,
                       }}
-                      className="flex w-full cursor-pointer items-center justify-between px-3.5 py-2.5"
                     >
-                      <span className="text-xs font-medium text-muted-foreground">
-                        What your agent understood
-                      </span>
-                      <div className="flex items-center gap-1.5">
-                        {!showInterpretation && (
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleEditQuery();
-                            }}
-                            className="flex items-center gap-1 text-[11px] text-muted-foreground hover:text-foreground"
-                          >
-                            <Pencil size={10} />
-                            Edit
-                          </button>
-                        )}
-                        <motion.div
-                          animate={{
-                            rotate: showInterpretation ? 90 : 0,
+                      <div style={{ fontSize: 12, marginBottom: 8, display: "flex", alignItems: "center", gap: 6 }}>
+                        <span
+                          style={{
+                            display: "inline-block",
+                            animation: "win-blink 1s infinite",
                           }}
-                          transition={{ duration: 0.15 }}
                         >
-                          <ChevronRight
-                            size={14}
-                            className="text-muted-foreground"
-                          />
-                        </motion.div>
+                          ⚙️
+                        </span>
+                        Searching providers database...
+                      </div>
+                      <WinProgressBar />
+                      <div style={{ fontSize: 10, color: "#808080", marginTop: 6 }}>
+                        Checking availability, pricing &amp; reviews...
                       </div>
                     </div>
 
-                    <AnimatePresence>
-                      {showInterpretation && (
-                        <motion.div
-                          initial={{ height: 0, opacity: 0 }}
-                          animate={{ height: "auto", opacity: 1 }}
-                          exit={{ height: 0, opacity: 0 }}
-                          transition={{ duration: 0.2 }}
-                          className="overflow-hidden"
-                        >
-                          <div className="border-t border-border">
-                            {Object.entries(interpretation).map(
-                              ([key, value], i, arr) => (
-                                <div
-                                  key={key}
-                                  className={cn(
-                                    "flex items-center justify-between px-3.5 py-2.5",
-                                    i < arr.length - 1 &&
-                                      "border-b border-border"
-                                  )}
-                                >
-                                  <span className="text-xs text-muted-foreground capitalize">
-                                    {key
-                                      .replace(/([A-Z])/g, " $1")
-                                      .trim()}
-                                  </span>
-                                  <span className="text-xs font-medium text-foreground">
-                                    {value}
-                                  </span>
-                                </div>
-                              )
-                            )}
-                            <div className="border-t border-border px-3.5 py-2">
-                              <button
-                                onClick={handleEditQuery}
-                                className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground"
-                              >
-                                <Pencil size={11} />
-                                Edit search
-                              </button>
-                            </div>
-                          </div>
-                        </motion.div>
-                      )}
-                    </AnimatePresence>
+                    {/* Skeleton placeholders */}
+                    {[1, 2, 3].map((i) => (
+                      <div
+                        key={i}
+                        style={{
+                          height: 60,
+                          background: "#c4c0b8",
+                          border: "1px solid #808080",
+                          marginTop: 6,
+                          opacity: 1 - i * 0.15,
+                        }}
+                      />
+                    ))}
                   </div>
+                )}
 
-                  {/* Results */}
-                  <div>
-                    <div className="flex items-center justify-between">
-                      <p className="text-sm font-semibold">
-                        {results.length} providers found
-                      </p>
-                      <button className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground">
-                        Sort by: Best match
-                        <ChevronDown size={12} />
+                {/* Results */}
+                {view === "results" && interpretation && (
+                  <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+
+                    {/* Agent reply */}
+                    <div
+                      style={{
+                        background: "#d4e8ff",
+                        border: "2px inset #808080",
+                        padding: "6px 10px",
+                        fontSize: 12,
+                        display: "flex",
+                        gap: 6,
+                        alignItems: "flex-start",
+                      }}
+                    >
+                      <span>🤖</span>
+                      <span>
+                        Found <strong>{results.length} providers</strong> matching your request.
+                      </span>
+                    </div>
+
+                    {/* Interpretation group box */}
+                    <fieldset style={{ border: "2px groove #808080", padding: "6px 8px" }}>
+                      <legend
+                        style={{ fontSize: 11, padding: "0 4px", cursor: "pointer", display: "flex", alignItems: "center", gap: 4 }}
+                        onClick={() => setShowInterpretation(!showInterpretation)}
+                      >
+                        {showInterpretation ? "▼" : "▶"} Agent Interpretation
+                        <button
+                          onClick={(e) => { e.stopPropagation(); handleEditQuery(); }}
+                          className="win-button"
+                          style={{ marginLeft: 8, fontSize: 10, padding: "1px 6px" }}
+                        >
+                          ✏️ Edit
+                        </button>
+                      </legend>
+                      {showInterpretation && (
+                        <table style={{ width: "100%", fontSize: 11, borderCollapse: "collapse" }}>
+                          <tbody>
+                            {Object.entries(interpretation).map(([key, value]) => (
+                              <tr key={key} style={{ borderBottom: "1px solid #c4c0b8" }}>
+                                <td style={{ padding: "3px 6px", color: "#808080", whiteSpace: "nowrap" }}>
+                                  {key.replace(/([A-Z])/g, " $1").trim()}:
+                                </td>
+                                <td style={{ padding: "3px 6px", fontWeight: "bold", color: "#000080" }}>
+                                  {value}
+                                </td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      )}
+                    </fieldset>
+
+                    {/* Sort toolbar */}
+                    <div
+                      style={{
+                        background: "#d4d0c8",
+                        borderBottom: "1px solid #808080",
+                        padding: "3px 6px",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "space-between",
+                        fontSize: 11,
+                      }}
+                    >
+                      <span style={{ fontWeight: "bold" }}>{results.length} Results Found</span>
+                      <button className="win-button" style={{ fontSize: 10 }}>
+                        Sort: Best Match ▼
                       </button>
                     </div>
-                    <div className="mt-3 space-y-3">
+
+                    {/* Provider cards */}
+                    <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
                       {results.map((provider) => (
-                        <ProviderCard
+                        <Win2kProviderCard
                           key={provider.id}
                           provider={provider}
-                          variant="search"
                           onClick={setSelectedProvider}
                         />
                       ))}
                     </div>
+
+                    {/* Recommendation dialog */}
+                    {results.length > 0 && (
+                      <div
+                        style={{
+                          background: "#ece9d8",
+                          border: "2px inset #808080",
+                          padding: "10px 12px",
+                        }}
+                      >
+                        <div style={{ fontSize: 12, marginBottom: 8, display: "flex", gap: 6 }}>
+                          <span>🤖</span>
+                          <span>
+                            <strong>{results[0].name}</strong> is your best match — highest rated, fits your budget, and available tomorrow morning. Book now?
+                          </span>
+                        </div>
+                        <div style={{ display: "flex", gap: 8 }}>
+                          <a href={`/provider/${results[0].id}`}>
+                            <button
+                              className="win-button"
+                              style={{ background: "#000080", color: "#ffffff", padding: "4px 16px" }}
+                            >
+                              ✅ Yes, Book Now
+                            </button>
+                          </a>
+                          <a href={`/provider/${results[0].id}`}>
+                            <button className="win-button" style={{ padding: "4px 16px" }}>
+                              👤 View Profile
+                            </button>
+                          </a>
+                          <button className="win-button" onClick={handleReset} style={{ padding: "4px 12px" }}>
+                            Cancel
+                          </button>
+                        </div>
+                      </div>
+                    )}
                   </div>
+                )}
+              </div>
+
+              {/* Follow-up input */}
+              {view === "results" && (
+                <div
+                  style={{
+                    marginTop: 8,
+                    paddingTop: 8,
+                    borderTop: "1px solid #808080",
+                    display: "flex",
+                    gap: 6,
+                    alignItems: "flex-end",
+                  }}
+                >
+                  <textarea
+                    value={query}
+                    onChange={(e) => setQuery(e.target.value)}
+                    onKeyDown={handleKeyDown}
+                    placeholder="Ask a follow-up..."
+                    rows={1}
+                    className="win-input flex-1"
+                    style={{ resize: "none", fontSize: 12 }}
+                  />
+                  <button
+                    className="win-button"
+                    onClick={handleSubmit}
+                    disabled={!query.trim()}
+                  >
+                    Send ▶
+                  </button>
                 </div>
               )}
-            </div>
+            </WinWindow>
+            <StatusBar
+              text={
+                view === "loading"
+                  ? "Searching..." : `${results.length} providers found`
+              }
+            />
           </div>
+        )}
+      </div>
 
-          {/* Agent follow-up */}
-          {view === "results" && results.length > 0 && (
-            <motion.div
-              initial={{ opacity: 0, y: 8 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.3, duration: 0.3 }}
-              className="flex gap-2.5"
-            >
-              <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-foreground">
-                <Sparkles size={12} className="text-background" />
-              </div>
-              <div className="flex-1 space-y-2.5">
-                <p className="text-sm leading-relaxed text-foreground">
-                  <span className="font-semibold">
-                    {results[0].name}
-                  </span>{" "}
-                  is your best match — highest rated, fits your budget,
-                  and available tomorrow morning. Want me to book them?
-                </p>
-                <div className="flex gap-2">
-                  <a
-                    href={`/provider/${results[0].id}`}
-                    className="flex h-9 items-center rounded-full bg-foreground px-4 text-xs font-medium text-background transition-opacity hover:opacity-90"
-                  >
-                    Yes, book now
-                  </a>
-                  <a
-                    href={`/provider/${results[0].id}`}
-                    className="flex h-9 items-center rounded-full border border-border px-4 text-xs font-medium text-foreground transition-colors hover:bg-accent"
-                  >
-                    View profile first
-                  </a>
-                </div>
-              </div>
-            </motion.div>
-          )}
+      {/* ── Taskbar ── */}
+      <div
+        className="win-taskbar fixed bottom-0 left-0 right-0 z-50 flex items-center"
+        style={{ height: 28, padding: "0 4px", gap: 4 }}
+      >
+        {/* Start button */}
+        <button
+          className="win-raised"
+          style={{
+            background: "#d4d0c8",
+            fontSize: 12,
+            fontWeight: "bold",
+            padding: "2px 8px",
+            display: "flex",
+            alignItems: "center",
+            gap: 4,
+            border: "none",
+            boxShadow: "inset -1px -1px 0 #000, inset 1px 1px 0 #fff, inset -2px -2px 0 #808080, inset 2px 2px 0 #dfdfdf",
+            cursor: "default",
+          }}
+        >
+          <span>🪟</span>
+          <span>Start</span>
+        </button>
+
+        <div style={{ width: 1, height: "80%", background: "#808080", margin: "0 2px" }} />
+
+        {/* Active window button */}
+        <button
+          style={{
+            background: "#d4d0c8",
+            fontSize: 11,
+            padding: "2px 8px",
+            display: "flex",
+            alignItems: "center",
+            gap: 4,
+            boxShadow: "inset 1px 1px 0 #808080, inset -1px -1px 0 #ffffff",
+            border: "1px solid #808080",
+            cursor: "default",
+            minWidth: 120,
+            overflow: "hidden",
+            textOverflow: "ellipsis",
+            whiteSpace: "nowrap",
+          }}
+        >
+          🏠 Patch Home Services
+        </button>
+
+        {/* Spacer */}
+        <div style={{ flex: 1 }} />
+
+        {/* System tray */}
+        <div
+          style={{
+            background: "#d4d0c8",
+            border: "1px inset #808080",
+            padding: "2px 8px",
+            fontSize: 11,
+            display: "flex",
+            alignItems: "center",
+            gap: 6,
+          }}
+        >
+          <span>🔊</span>
+          <span>🌐</span>
+          <span style={{ fontFamily: "monospace" }}>{time}</span>
         </div>
       </div>
 
-      {/* Follow-up input */}
-      {view === "results" && (
-        <div className="shrink-0 bg-background px-5 pb-[max(env(safe-area-inset-bottom),16px)] pt-2">
-          <div className="flex items-end gap-2 rounded-2xl border border-border bg-accent/30 px-3 py-2">
-            <textarea
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              onKeyDown={handleKeyDown}
-              placeholder="Ask a follow-up..."
-              rows={1}
-              className="flex-1 resize-none bg-transparent text-sm leading-relaxed text-foreground placeholder:text-muted-foreground focus:outline-none"
-            />
-            <button
-              onClick={handleSubmit}
-              disabled={!query.trim()}
-              className={cn(
-                "flex h-8 w-8 shrink-0 items-center justify-center rounded-full transition-colors",
-                query.trim()
-                  ? "bg-foreground text-background"
-                  : "bg-muted text-muted-foreground"
-              )}
-            >
-              <ArrowUp size={16} strokeWidth={2} />
-            </button>
-          </div>
-        </div>
-      )}
-
-      {/* Provider detail bottom sheet */}
+      {/* Provider detail sheet */}
       <AnimatePresence>
         {selectedProvider && (
           <ProviderDetailSheet
@@ -506,5 +677,82 @@ export default function HomePage() {
         )}
       </AnimatePresence>
     </div>
+  );
+}
+
+/* ── Win2000-styled provider card ── */
+function Win2kProviderCard({
+  provider,
+  onClick,
+}: {
+  provider: Provider;
+  onClick?: (p: Provider) => void;
+}) {
+  const categoryIcons: Record<string, string> = {
+    plumbing: "🔧",
+    cleaning: "🧹",
+    electrical: "⚡",
+    handyman: "🛠️",
+    "tv-mounting": "📺",
+    painting: "🎨",
+    "pest-control": "🐛",
+    "appliance-repair": "🔌",
+  };
+  const icon = categoryIcons[provider.category] ?? "🏠";
+
+  const handleClick = () => onClick?.(provider);
+
+  return (
+    <button
+      onClick={handleClick}
+      type="button"
+      style={{
+        background: "#d4d0c8",
+        border: "2px outset #ffffff",
+        padding: "6px 8px",
+        display: "flex",
+        alignItems: "center",
+        gap: 8,
+        width: "100%",
+        textAlign: "left",
+        cursor: "default",
+        fontSize: 11,
+      }}
+      onMouseEnter={(e) => {
+        (e.currentTarget as HTMLButtonElement).style.background = "#000080";
+        (e.currentTarget as HTMLButtonElement).style.color = "#ffffff";
+      }}
+      onMouseLeave={(e) => {
+        (e.currentTarget as HTMLButtonElement).style.background = "#d4d0c8";
+        (e.currentTarget as HTMLButtonElement).style.color = "#000000";
+      }}
+    >
+      <span style={{ fontSize: 22 }}>{icon}</span>
+      <div style={{ flex: 1, minWidth: 0 }}>
+        <div style={{ fontWeight: "bold", fontSize: 12 }}>{provider.name}</div>
+        <div style={{ opacity: 0.7, fontSize: 10 }}>
+          {provider.category.replace("-", " ")} · {provider.distance} away
+        </div>
+        <div style={{ fontSize: 10 }}>
+          ⭐ {provider.rating} ({provider.reviewCount} reviews)
+        </div>
+      </div>
+      <div style={{ textAlign: "right", whiteSpace: "nowrap" }}>
+        <div style={{ fontWeight: "bold" }}>{provider.priceRange}</div>
+        {provider.aiTag && (
+          <div
+            style={{
+              background: "#000080",
+              color: "#ffffff",
+              fontSize: 9,
+              padding: "1px 4px",
+              marginTop: 2,
+            }}
+          >
+            {provider.aiTag}
+          </div>
+        )}
+      </div>
+    </button>
   );
 }
