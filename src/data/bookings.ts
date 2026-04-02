@@ -1,11 +1,5 @@
 import type { Booking } from "@/types";
 
-function formatDate(daysFromNow: number): string {
-  const d = new Date();
-  d.setDate(d.getDate() + daysFromNow);
-  return d.toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" });
-}
-
 function pastDate(daysAgo: number): string {
   const d = new Date();
   d.setDate(d.getDate() - daysAgo);
@@ -13,27 +7,6 @@ function pastDate(daysAgo: number): string {
 }
 
 export const bookings: Booking[] = [
-  {
-    id: "bk-001",
-    providerId: "golden-gate-plumbing",
-    providerName: "Golden Gate Home Plumbing",
-    providerPhoto: "/providers/plumbing-9.jpg",
-    serviceType: "Plumbing",
-    serviceSummary: "Kitchen faucet replacement",
-    date: formatDate(2),
-    time: "9:00 AM – 11:00 AM",
-    address: "742 Valencia St, San Francisco",
-    status: "confirmed",
-    priceEstimate: "$180–$320",
-    statusTimeline: [
-      { label: "Request submitted", time: "Today, 2:15 PM", completed: true },
-      { label: "Provider confirmed", time: "Today, 2:42 PM", completed: true },
-      { label: "On the way", completed: false },
-      { label: "In progress", completed: false },
-      { label: "Completed", completed: false },
-    ],
-    userQuery: "My kitchen faucet is dripping nonstop, need it replaced this week",
-  },
   {
     id: "bk-002",
     providerId: "rapid-response-plumbing",

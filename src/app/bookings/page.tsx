@@ -4,6 +4,7 @@ import Link from "next/link";
 import { motion } from "framer-motion";
 import {
   CalendarCheck,
+  CalendarPlus,
   Search,
   CircleCheck,
 } from "lucide-react";
@@ -81,6 +82,17 @@ function BookingCard({
               ))}
             </div>
           )}
+
+        {/* Add to calendar for upcoming bookings */}
+        {booking.status === "confirmed" && (
+          <button
+            onClick={(e) => e.preventDefault()}
+            className="flex w-full items-center justify-center gap-1.5 border-t border-border py-3 text-xs font-medium text-muted-foreground transition-colors hover:bg-accent/40 hover:text-foreground"
+          >
+            <CalendarPlus size={13} strokeWidth={1.5} />
+            Add to calendar
+          </button>
+        )}
       </motion.div>
     </Link>
   );
