@@ -925,6 +925,10 @@ export function getSearchResults(): Provider[] {
   return providers.filter((p) => p.category === "plumbing").slice(0, 5);
 }
 
+export function getMoreResults(): Provider[] {
+  return providers.filter((p) => p.category !== "plumbing").slice(0, 3);
+}
+
 export function getPopularProviders(): Provider[] {
   return [...providers].sort((a, b) => b.reviewCount - a.reviewCount).slice(0, 5);
 }
