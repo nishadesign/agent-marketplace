@@ -19,6 +19,8 @@ import {
 import Link from "next/link";
 import { toast } from "sonner";
 
+import { PatchLogo } from "@/components/patch-logo";
+
 import { ProviderCard, COVER_IMAGES } from "@/components/home/provider-card";
 import { ProviderDetailSheet } from "@/components/home/provider-detail-sheet";
 import { useBookings } from "@/components/bookings-context";
@@ -199,9 +201,7 @@ export default function HomePage() {
             animate={{ opacity: 1, y: 0 }}
             className="flex flex-col items-center"
           >
-            <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-foreground">
-              <Sparkles size={22} className="text-background" />
-            </div>
+            <PatchLogo size={44} className="text-foreground" />
             <h1 className="mt-4 text-xl font-semibold tracking-tight">
               What do you need help with?
             </h1>
@@ -311,7 +311,7 @@ export default function HomePage() {
       {/* New conversation button — aligned with menu button */}
       <button
         onClick={handleReset}
-        className="fixed right-4 top-[max(env(safe-area-inset-top),16px)] z-[70] flex h-10 w-10 items-center justify-center rounded-full border border-white/60 bg-white/45 shadow-[0_2px_20px_rgba(0,0,0,0.06),inset_0_1px_0_rgba(255,255,255,0.7)] backdrop-blur-2xl transition-all hover:bg-white/60 hover:shadow-[0_2px_24px_rgba(0,0,0,0.1),inset_0_1px_0_rgba(255,255,255,0.8)]"
+        className="fixed right-4 top-[max(env(safe-area-inset-top),16px)] z-[70] flex h-10 w-10 items-center justify-center rounded-full border border-white/60 bg-white/45 shadow-[0_4px_24px_rgba(0,0,0,0.12),0_1px_4px_rgba(0,0,0,0.06),inset_0_1px_0_rgba(255,255,255,0.7)] backdrop-blur-2xl transition-all hover:bg-white/60 hover:shadow-[0_6px_28px_rgba(0,0,0,0.16),0_2px_6px_rgba(0,0,0,0.08),inset_0_1px_0_rgba(255,255,255,0.8)]"
       >
         <SquarePen size={18} strokeWidth={1.5} />
       </button>
@@ -327,8 +327,8 @@ export default function HomePage() {
         <div className="space-y-4">
           {/* User query bubble */}
           <div className="flex justify-end">
-            <div className="max-w-[85%] rounded-2xl rounded-br-md bg-foreground px-4 py-2.5">
-              <p className="text-sm leading-relaxed text-background">
+            <div className="max-w-[85%] rounded-2xl rounded-br-md bg-blue-50 px-4 py-2.5">
+              <p className="text-sm leading-relaxed text-blue-900">
                 {submittedQuery}
               </p>
             </div>
@@ -336,35 +336,15 @@ export default function HomePage() {
 
           {/* Agent response */}
           <div className="flex gap-2.5">
-            <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-foreground">
-              <Sparkles size={12} className="text-background" />
-            </div>
+            <PatchLogo size={28} className="shrink-0 text-foreground" />
 
             <div className="min-w-0 flex-1 space-y-3">
               {view === "loading" && (
-                <div className="space-y-2 pt-1">
-                  <div className="flex items-center gap-2">
-                    <motion.div
-                      animate={{ rotate: 360 }}
-                      transition={{
-                        repeat: Infinity,
-                        duration: 1.5,
-                        ease: "linear",
-                      }}
-                    >
-                      <Sparkles
-                        size={14}
-                        className="text-muted-foreground"
-                      />
-                    </motion.div>
-                    <p className="text-sm font-medium text-foreground">
-                      Finding the best matches...
-                    </p>
-                  </div>
-                  <p className="text-xs text-muted-foreground">
-                    Checking availability, pricing, and reviews
+                <div className="space-y-3 pt-1">
+                  <p className="shimmer-text text-sm font-medium text-muted-foreground">
+                    Thinking
                   </p>
-                  <div className="mt-3 space-y-2">
+                  <div className="space-y-2">
                     {[1, 2, 3].map((i) => (
                       <motion.div
                         key={i}
@@ -386,7 +366,7 @@ export default function HomePage() {
                 <div className="space-y-4">
                   <button
                     onClick={() => setShowInterpretation(true)}
-                    className="flex items-center gap-1 text-xs text-muted-foreground transition-colors hover:text-foreground"
+                    className="flex items-center gap-1 text-sm text-muted-foreground transition-colors hover:text-foreground"
                   >
                     Thought for {thinkingDuration || 2}s
                     <ChevronRight size={12} />
@@ -439,9 +419,7 @@ export default function HomePage() {
                   transition={{ delay: 0.3, duration: 0.3 }}
                   className="flex gap-2.5"
                 >
-                  <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-foreground">
-                    <Sparkles size={12} className="text-background" />
-                  </div>
+                  <PatchLogo size={28} className="shrink-0 text-foreground" />
                   <div className="flex-1 space-y-2.5">
                     <p className="text-sm leading-relaxed text-foreground">
                       Do any of these work for you, or would you like me to
@@ -465,8 +443,8 @@ export default function HomePage() {
                     animate={{ opacity: 1, y: 0 }}
                     className="flex justify-end"
                   >
-                    <div className="max-w-[85%] rounded-2xl rounded-br-md bg-foreground px-4 py-2.5">
-                      <p className="text-sm leading-relaxed text-background">
+                    <div className="max-w-[85%] rounded-2xl rounded-br-md bg-blue-50 px-4 py-2.5">
+                      <p className="text-sm leading-relaxed text-blue-900">
                         Show more
                       </p>
                     </div>
@@ -479,9 +457,7 @@ export default function HomePage() {
                     transition={{ delay: 0.15 }}
                     className="flex gap-2.5"
                   >
-                    <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-foreground">
-                      <Sparkles size={12} className="text-background" />
-                    </div>
+                    <PatchLogo size={28} className="shrink-0 text-foreground" />
                     <div className="min-w-0 flex-1 space-y-4">
                       <p className="text-sm leading-relaxed text-foreground">
                         Here are {moreResults.length} more providers that might help.
@@ -519,8 +495,8 @@ export default function HomePage() {
                 animate={{ opacity: 1, y: 0 }}
                 className="flex justify-end"
               >
-                <div className="max-w-[85%] rounded-2xl rounded-br-md bg-foreground px-4 py-2.5">
-                  <p className="text-sm leading-relaxed text-background">
+                <div className="max-w-[85%] rounded-2xl rounded-br-md bg-blue-50 px-4 py-2.5">
+                  <p className="text-sm leading-relaxed text-blue-900">
                     Book {bookingProvider.name}
                   </p>
                 </div>
@@ -533,9 +509,7 @@ export default function HomePage() {
                 transition={{ delay: 0.15 }}
                 className="flex gap-2.5"
               >
-                <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-foreground">
-                  <Sparkles size={12} className="text-background" />
-                </div>
+                <PatchLogo size={28} className="shrink-0 text-foreground" />
                 <div className="min-w-0 flex-1 space-y-3">
                   <p className="text-sm leading-relaxed text-foreground">
                     Here are{" "}
@@ -631,9 +605,7 @@ export default function HomePage() {
               animate={{ opacity: 1, y: 0 }}
               className="flex gap-2.5"
             >
-              <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-foreground">
-                <Sparkles size={12} className="text-background" />
-              </div>
+              <PatchLogo size={28} className="shrink-0 text-foreground" />
               <div className="min-w-0 flex-1 space-y-3">
                 <p className="text-sm leading-relaxed text-foreground">
                   You&apos;re all set! Here&apos;s your upcoming booking.

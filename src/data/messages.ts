@@ -13,8 +13,16 @@ export const conversations: Conversation[] = [
       {
         id: "m1",
         sender: "system",
-        text: "Booking confirmed for kitchen faucet replacement.",
+        text: "Booking confirmed",
         timestamp: "Today, 2:15 PM",
+        bookingSummary: {
+          service: "Kitchen faucet replacement",
+          provider: "Golden Gate Home Plumbing",
+          date: "Thursday, Apr 3",
+          time: "9:00 – 11:00 AM",
+          address: "742 Hayes St, San Francisco",
+          price: "$150 – $220",
+        },
       },
       {
         id: "m2",
@@ -55,8 +63,16 @@ export const conversations: Conversation[] = [
       {
         id: "m6",
         sender: "system",
-        text: "Booking confirmed for Mar 27, 9:00 AM – 12:00 PM.",
+        text: "Booking confirmed",
         timestamp: "Mar 26, 4:35 PM",
+        bookingSummary: {
+          service: "Deep cleaning — 2BR apartment",
+          provider: "Sparkle Clean SF",
+          date: "Mar 27",
+          time: "9:00 AM – 12:00 PM",
+          address: "742 Hayes St, San Francisco",
+          price: "$180",
+        },
       },
       {
         id: "m7",

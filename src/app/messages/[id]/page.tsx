@@ -5,11 +5,60 @@ import { motion } from "framer-motion";
 import { ArrowLeft, Send } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
 
+import { CalendarCheck, Clock, MapPin } from "lucide-react";
+
 import { getConversationById } from "@/data/messages";
+import { PatchLogo } from "@/components/patch-logo";
 import type { Message } from "@/types";
 import { cn } from "@/lib/utils";
 
+function BookingSummaryCard({ message }: { message: Message }) {
+  const summary = message.bookingSummary!;
+  return (
+    <div className="flex gap-2.5 py-1">
+      <PatchLogo size={24} className="mt-0.5 shrink-0 text-foreground" />
+      <div className="min-w-0 flex-1">
+        <p className="text-[11px] font-medium text-muted-foreground">
+          {message.timestamp}
+        </p>
+        <div className="mt-1.5 rounded-2xl border border-border bg-background">
+          <div className="flex items-center gap-2.5 px-3.5 pt-3 pb-2.5">
+            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-emerald-50">
+              <CalendarCheck size={14} strokeWidth={1.5} className="text-emerald-600" />
+            </div>
+            <div className="min-w-0">
+              <p className="text-[11px] font-semibold uppercase tracking-wider text-emerald-600">
+                Booking confirmed
+              </p>
+              <p className="mt-0.5 truncate text-sm font-semibold text-foreground">
+                {summary.service}
+              </p>
+            </div>
+          </div>
+          <div className="space-y-1.5 border-t border-border px-3.5 py-2.5">
+            <div className="flex items-center gap-2 text-xs text-muted-foreground">
+              <Clock size={12} strokeWidth={1.5} className="shrink-0" />
+              <span>{summary.date} · {summary.time}</span>
+            </div>
+            <div className="flex items-center gap-2 text-xs text-muted-foreground">
+              <MapPin size={12} strokeWidth={1.5} className="shrink-0" />
+              <span>{summary.address}</span>
+            </div>
+            <p className="mt-1 text-xs font-medium text-foreground">
+              {summary.price}
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function ChatBubble({ message }: { message: Message }) {
+  if (message.sender === "system" && message.bookingSummary) {
+    return <BookingSummaryCard message={message} />;
+  }
+
   if (message.sender === "system") {
     return (
       <div className="flex justify-center py-2">
@@ -30,7 +79,7 @@ function ChatBubble({ message }: { message: Message }) {
         className={cn(
           "max-w-[80%] rounded-2xl px-3.5 py-2.5",
           isUser
-            ? "rounded-br-md bg-foreground text-background"
+            ? "rounded-br-md bg-blue-50 text-blue-900"
             : "rounded-bl-md bg-muted text-foreground"
         )}
       >
@@ -76,7 +125,7 @@ export default function ConversationPage() {
   return (
     <div className="flex h-[100dvh] flex-col bg-background">
       {/* Header */}
-      <div className="flex items-center gap-3 border-b border-border px-4 pb-3 pt-14">
+      <div className="flex items-center gap-3 border-b border-border px-4 pb-3 pt-20">
         <button
           onClick={() => router.back()}
           className="flex h-9 w-9 items-center justify-center rounded-full transition-colors hover:bg-muted"
