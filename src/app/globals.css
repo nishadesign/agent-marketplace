@@ -152,3 +152,28 @@
     --border-angle: 360deg;
   }
 }
+
+@keyframes shimmer-sweep {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+.shimmer-text {
+  background: linear-gradient(
+    90deg,
+    currentColor 0%,
+    currentColor 30%,
+    rgba(0, 0, 0, 0.08) 50%,
+    currentColor 70%,
+    currentColor 100%
+  );
+  background-size: 200% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: shimmer-sweep 4s ease-in-out infinite;
+}

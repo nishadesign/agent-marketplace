@@ -11,9 +11,10 @@ import {
   CalendarCheck,
   MessageCircle,
   User,
-  Sparkles,
   SquarePen,
 } from "lucide-react";
+
+import { PatchLogo } from "@/components/patch-logo";
 
 import { cn } from "@/lib/utils";
 
@@ -38,7 +39,7 @@ export function SideNav() {
       {/* Menu trigger */}
       <button
         onClick={() => setOpen(true)}
-        className="fixed left-4 top-[max(env(safe-area-inset-top),16px)] z-[70] flex h-10 w-10 items-center justify-center rounded-full border border-white/60 bg-white/45 shadow-[0_2px_20px_rgba(0,0,0,0.06),inset_0_1px_0_rgba(255,255,255,0.7)] backdrop-blur-2xl transition-all hover:bg-white/60 hover:shadow-[0_2px_24px_rgba(0,0,0,0.1),inset_0_1px_0_rgba(255,255,255,0.8)]"
+        className="fixed left-4 top-[max(env(safe-area-inset-top),16px)] z-[70] flex h-10 w-10 items-center justify-center rounded-full border border-white/60 bg-white/45 shadow-[0_4px_24px_rgba(0,0,0,0.12),0_1px_4px_rgba(0,0,0,0.06),inset_0_1px_0_rgba(255,255,255,0.7)] backdrop-blur-2xl transition-all hover:bg-white/60 hover:shadow-[0_6px_28px_rgba(0,0,0,0.16),0_2px_6px_rgba(0,0,0,0.08),inset_0_1px_0_rgba(255,255,255,0.8)]"
       >
         <Menu size={20} strokeWidth={1.5} />
       </button>
@@ -47,7 +48,7 @@ export function SideNav() {
       {pathname !== "/" && (
         <Link
           href="/"
-          className="fixed right-4 top-[max(env(safe-area-inset-top),16px)] z-[70] flex h-10 w-10 items-center justify-center rounded-full border border-white/60 bg-white/45 shadow-[0_2px_20px_rgba(0,0,0,0.06),inset_0_1px_0_rgba(255,255,255,0.7)] backdrop-blur-2xl transition-all hover:bg-white/60 hover:shadow-[0_2px_24px_rgba(0,0,0,0.1),inset_0_1px_0_rgba(255,255,255,0.8)]"
+          className="fixed right-4 top-[max(env(safe-area-inset-top),16px)] z-[70] flex h-10 w-10 items-center justify-center rounded-full border border-white/60 bg-white/45 shadow-[0_4px_24px_rgba(0,0,0,0.12),0_1px_4px_rgba(0,0,0,0.06),inset_0_1px_0_rgba(255,255,255,0.7)] backdrop-blur-2xl transition-all hover:bg-white/60 hover:shadow-[0_6px_28px_rgba(0,0,0,0.16),0_2px_6px_rgba(0,0,0,0.08),inset_0_1px_0_rgba(255,255,255,0.8)]"
         >
           <SquarePen size={18} strokeWidth={1.5} />
         </Link>
@@ -80,9 +81,7 @@ export function SideNav() {
               {/* Header */}
               <div className="flex items-center justify-between px-5 pt-[max(env(safe-area-inset-top),16px)] pb-2">
                 <div className="flex items-center gap-2.5">
-                  <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-foreground">
-                    <Sparkles size={15} className="text-background" />
-                  </div>
+                  <PatchLogo size={28} className="text-foreground" />
                   <span className="text-base font-semibold tracking-tight">
                     Patch
                   </span>

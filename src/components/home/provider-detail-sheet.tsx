@@ -62,6 +62,7 @@ const badgeConfig: Record<TrustBadgeType, { icon: typeof Shield; label: string; 
 export function ProviderDetailSheet({ provider, coverImage, onClose, onBook }: ProviderDetailSheetProps) {
   const [selectedDay, setSelectedDay] = useState(0);
   const [selectedSlotId, setSelectedSlotId] = useState<string | null>(null);
+  const [expanded, setExpanded] = useState(false);
 
   useEffect(() => {
     document.body.style.overflow = "hidden";
@@ -69,6 +70,12 @@ export function ProviderDetailSheet({ provider, coverImage, onClose, onBook }: P
   }, []);
 
   const currentDay = provider.availability[selectedDay];
+
+  function handleScroll(e: React.UIEvent<HTMLDivElement>) {
+    const scrollTop = e.currentTarget.scrollTop;
+    if (scrollTop > 10 && !expanded) setExpanded(true);
+    if (scrollTop <= 0 && expanded) setExpanded(false);
+  }
 
   return (
     <>
@@ -86,15 +93,22 @@ export function ProviderDetailSheet({ provider, coverImage, onClose, onBook }: P
         animate={{ y: 0 }}
         exit={{ y: "100%" }}
         transition={{ type: "spring", damping: 30, stiffness: 300 }}
-        className="fixed inset-x-0 bottom-0 z-[80] mx-auto flex h-[92dvh] w-full max-w-lg flex-col rounded-t-3xl bg-background shadow-2xl"
+        className={cn(
+          "fixed inset-x-0 bottom-0 z-[80] flex w-full flex-col bg-background shadow-2xl transition-[height,border-radius] duration-300 ease-out",
+          expanded ? "h-[100dvh] rounded-none" : "h-[92dvh] rounded-t-3xl"
+        )}
       >
         <div
-          className="flex-1 overflow-y-auto overscroll-contain"
+          className="no-scrollbar flex-1 overflow-y-auto overscroll-contain"
           style={{ WebkitOverflowScrolling: "touch" }}
+          onScroll={handleScroll}
         >
           {/* Hero */}
           <div className="relative">
-            <div className="relative h-56 w-full overflow-hidden rounded-t-3xl">
+            <div className={cn(
+              "relative h-56 w-full overflow-hidden transition-[border-radius] duration-300",
+              expanded ? "rounded-none" : "rounded-t-3xl"
+            )}>
               <Image
                 src={coverImage}
                 alt={provider.name}

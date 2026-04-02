@@ -219,7 +219,7 @@ export default function BookingDetailPage({
       {/* Back button */}
       <button
         onClick={() => router.back()}
-        className="fixed left-4 top-[max(env(safe-area-inset-top),16px)] z-40 flex h-10 w-10 items-center justify-center rounded-full border border-white/60 bg-white/45 shadow-[0_2px_20px_rgba(0,0,0,0.06),inset_0_1px_0_rgba(255,255,255,0.7)] backdrop-blur-2xl transition-all hover:bg-white/60 hover:shadow-[0_2px_24px_rgba(0,0,0,0.1),inset_0_1px_0_rgba(255,255,255,0.8)]"
+        className="fixed left-4 top-[max(env(safe-area-inset-top),16px)] z-40 flex h-10 w-10 items-center justify-center rounded-full border border-white/60 bg-white/45 shadow-[0_4px_24px_rgba(0,0,0,0.12),0_1px_4px_rgba(0,0,0,0.06),inset_0_1px_0_rgba(255,255,255,0.7)] backdrop-blur-2xl transition-all hover:bg-white/60 hover:shadow-[0_6px_28px_rgba(0,0,0,0.16),0_2px_6px_rgba(0,0,0,0.08),inset_0_1px_0_rgba(255,255,255,0.8)]"
       >
         <ArrowLeft size={20} strokeWidth={1.5} />
       </button>
@@ -273,46 +273,50 @@ export default function BookingDetailPage({
           )}
         </div>
 
-        {/* Status Timeline */}
-        <div className="rounded-2xl border border-border bg-background p-4">
-          <h3 className="mb-4 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-            Status
-          </h3>
-          <div className="pl-1">
-            {booking.statusTimeline.map((step, i) => (
-              <TimelineStep
-                key={step.label}
-                step={step}
-                isLast={i === booking.statusTimeline.length - 1}
+        {/* Status Timeline — hidden for completed bookings */}
+        {!isCompleted && (
+          <div className="rounded-2xl border border-border bg-background p-4">
+            <h3 className="mb-4 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+              Status
+            </h3>
+            <div className="pl-1">
+              {booking.statusTimeline.map((step, i) => (
+                <TimelineStep
+                  key={step.label}
+                  step={step}
+                  isLast={i === booking.statusTimeline.length - 1}
+                />
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Booking Info — non-completed bookings */}
+        {!isCompleted && (
+          <div className="rounded-2xl border border-border bg-background p-4">
+            <h3 className="mb-4 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+              Details
+            </h3>
+            <div className="space-y-4">
+              <InfoRow
+                icon={CalendarCheck}
+                label="Date & Time"
+                value={`${booking.date} · ${booking.time}`}
               />
-            ))}
+              <InfoRow icon={MapPin} label="Address" value={booking.address} />
+              <InfoRow
+                icon={DollarSign}
+                label="Price Estimate"
+                value={booking.priceEstimate}
+              />
+              {booking.notes && (
+                <InfoRow icon={StickyNote} label="Notes" value={booking.notes} />
+              )}
+            </div>
           </div>
-        </div>
+        )}
 
-        {/* Booking Info */}
-        <div className="rounded-2xl border border-border bg-background p-4">
-          <h3 className="mb-4 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-            Details
-          </h3>
-          <div className="space-y-4">
-            <InfoRow
-              icon={CalendarCheck}
-              label="Date & Time"
-              value={`${booking.date} · ${booking.time}`}
-            />
-            <InfoRow icon={MapPin} label="Address" value={booking.address} />
-            <InfoRow
-              icon={DollarSign}
-              label="Price Estimate"
-              value={booking.priceEstimate}
-            />
-            {booking.notes && (
-              <InfoRow icon={StickyNote} label="Notes" value={booking.notes} />
-            )}
-          </div>
-        </div>
-
-        {/* Agent Summary — completed bookings only */}
+        {/* Service Summary with date — completed bookings only */}
         {isCompleted && booking.agentSummary && (
           <div className="rounded-2xl border border-border bg-background p-4">
             <div className="mb-3 flex items-center gap-2">
@@ -323,6 +327,10 @@ export default function BookingDetailPage({
                 Service Summary
               </h3>
             </div>
+            <p className="mb-3 flex items-center gap-1.5 text-xs text-muted-foreground">
+              <CalendarCheck size={13} strokeWidth={1.5} className="shrink-0" />
+              {booking.date} · {booking.time}
+            </p>
             <p className="text-sm leading-relaxed text-foreground/80">
               {booking.agentSummary}
             </p>
@@ -351,7 +359,7 @@ export default function BookingDetailPage({
             </button>
           )}
 
-          {!isCancelled && (
+          {!isCompleted && !isCancelled && (
             <Link
               href={`/messages/${booking.providerId}`}
               className="flex h-12 flex-1 items-center justify-center gap-2 rounded-2xl bg-foreground text-sm font-medium text-background transition-opacity hover:opacity-90"

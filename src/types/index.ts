@@ -134,11 +134,21 @@ export interface Conversation {
 
 export type MessageSender = "user" | "provider" | "system";
 
+export interface BookingSummary {
+  service: string;
+  provider: string;
+  date: string;
+  time: string;
+  address: string;
+  price: string;
+}
+
 export interface Message {
   id: string;
   sender: MessageSender;
   text: string;
   timestamp: string;
+  bookingSummary?: BookingSummary;
 }
 
 export interface CategoryItem {
