@@ -11,11 +11,14 @@ import {
   Check,
   Clock,
   CalendarCheck,
+  CalendarPlus,
   MessageSquare,
   MapPin,
   Star,
   Shield,
+  BadgeCheck,
 } from "lucide-react";
+import Image from "next/image";
 import Link from "next/link";
 import { toast } from "sonner";
 
@@ -38,26 +41,80 @@ type ConversationStep =
   | "booking"
   | "confirmed";
 
-const ROTATING_PROMPTS = [
+interface FlowConfig {
+  searchingMessage: string;
+  skipBudget: boolean;
+  budgetPreset?: string;
+  budgetPresetLabel?: string;
+  budgetOptions: { id: string; label: string }[];
+  timingOptions: { id: string; label: string }[];
+  providerCategory: string;
+  cardVariant: "default" | "gallery";
+  matchSummary: (budget: string, timing: string) => string;
+}
+
+const SAMPLE_PROMPTS = [
   "Need a plumber tomorrow morning under $180",
   "Deep clean my 2BR apartment this weekend",
-  "Mount a 65-inch TV, budget around $200",
-  "Fix a leaking kitchen faucet ASAP",
-  "Paint my living room, need a quote",
 ];
 
-const BUDGET_OPTIONS = [
+const DEFAULT_BUDGET_OPTIONS = [
   { id: "under-200", label: "Under $200" },
   { id: "200-500", label: "$200 – $500" },
   { id: "insurance", label: "Covered by insurance" },
 ];
 
-const TIMING_OPTIONS = [
+const DEFAULT_TIMING_OPTIONS = [
   { id: "instantly", label: "Instantly" },
   { id: "today", label: "Today" },
   { id: "tomorrow", label: "Tomorrow" },
   { id: "earliest", label: "Earliest available" },
 ];
+
+const FLOW_CONFIGS: Record<string, FlowConfig> = {
+  "Need a plumber tomorrow morning under $180": {
+    searchingMessage: "Finding plumbers under $180 near you…",
+    skipBudget: true,
+    budgetPreset: "under-200",
+    budgetPresetLabel: "Under $180",
+    budgetOptions: DEFAULT_BUDGET_OPTIONS,
+    timingOptions: [
+      { id: "8am", label: "8 AM" },
+      { id: "9am", label: "9 AM" },
+      { id: "earliest", label: "Earliest available" },
+    ],
+    providerCategory: "plumbing",
+    cardVariant: "gallery",
+    matchSummary: (_budget, timing) =>
+      `Here's your best match for tomorrow at ${timing}:`,
+  },
+  "Deep clean my 2BR apartment this weekend": {
+    searchingMessage: "Finding top-rated cleaners near you…",
+    skipBudget: false,
+    budgetOptions: DEFAULT_BUDGET_OPTIONS,
+    timingOptions: [
+      { id: "morning", label: "Morning" },
+      { id: "afternoon", label: "Afternoon" },
+      { id: "evening", label: "Evening" },
+      { id: "anytime", label: "Anytime" },
+    ],
+    providerCategory: "cleaning",
+    cardVariant: "default",
+    matchSummary: (budget, timing) =>
+      `Based on your budget (${budget}) and preferred time (${timing}), here's your best match:`,
+  },
+};
+
+const DEFAULT_FLOW: FlowConfig = {
+  searchingMessage: "Searching service providers near you…",
+  skipBudget: false,
+  budgetOptions: DEFAULT_BUDGET_OPTIONS,
+  timingOptions: DEFAULT_TIMING_OPTIONS,
+  providerCategory: "plumbing",
+  cardVariant: "default",
+  matchSummary: (budget, timing) =>
+    `Based on your budget (${budget}) and timing (${timing}), here's your best match:`,
+};
 
 function getRelativeDay(dateStr: string): string {
   const cleaned = dateStr.replace(/^Tomorrow,\s*/, "");
@@ -205,6 +262,129 @@ function BestMatchCard({
   );
 }
 
+const PORTFOLIO_IMAGES = [
+  "/providers/portfolio/plumber-sink.png",
+  "/providers/portfolio/sink.png",
+  "/providers/portfolio/pipes.png",
+];
+
+function PlumberMatchCard({
+  provider,
+  onViewDetails,
+  onBook,
+}: {
+  provider: Provider;
+  onViewDetails: () => void;
+  onBook: () => void;
+}) {
+  const [currentImage, setCurrentImage] = useState(0);
+
+  const paginate = (direction: number) => {
+    setCurrentImage((prev) => {
+      const next = prev + direction;
+      if (next < 0) return 0;
+      if (next >= PORTFOLIO_IMAGES.length) return PORTFOLIO_IMAGES.length - 1;
+      return next;
+    });
+  };
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      className="overflow-hidden rounded-2xl border border-border bg-background"
+    >
+      {/* Swipeable image gallery */}
+      <div className="relative aspect-[4/3] w-full overflow-hidden">
+        <AnimatePresence initial={false} mode="popLayout">
+          <motion.div
+            key={currentImage}
+            initial={{ x: "100%" }}
+            animate={{ x: 0 }}
+            exit={{ x: "-100%" }}
+            transition={{ type: "spring", damping: 26, stiffness: 260 }}
+            drag="x"
+            dragConstraints={{ left: 0, right: 0 }}
+            dragElastic={0.12}
+            onDragEnd={(_e, info) => {
+              if (info.offset.x < -50) paginate(1);
+              else if (info.offset.x > 50) paginate(-1);
+            }}
+            className="absolute inset-0"
+          >
+            <Image
+              src={PORTFOLIO_IMAGES[currentImage]}
+              alt={`${provider.name} work photo ${currentImage + 1}`}
+              fill
+              className="object-cover"
+              sizes="(max-width: 512px) 100vw, 512px"
+              priority={currentImage === 0}
+            />
+          </motion.div>
+        </AnimatePresence>
+
+        {/* Dot indicators */}
+        <div className="absolute bottom-3 left-0 right-0 flex justify-center gap-1.5">
+          {PORTFOLIO_IMAGES.map((_, i) => (
+            <button
+              key={i}
+              onClick={() => setCurrentImage(i)}
+              className={cn(
+                "h-1.5 rounded-full transition-all",
+                i === currentImage
+                  ? "w-4 bg-white"
+                  : "w-1.5 bg-white/50"
+              )}
+            />
+          ))}
+        </div>
+      </div>
+
+      {/* Provider info — minimal: avatar with verified badge, name, reviews */}
+      <div className="p-4">
+        <div className="flex items-center gap-3">
+          <div className="relative">
+            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-muted text-sm font-semibold text-muted-foreground">
+              {provider.ownerName.charAt(0)}
+            </div>
+            <BadgeCheck
+              size={16}
+              strokeWidth={2}
+              className="absolute -bottom-0.5 -right-0.5 fill-blue-500 text-white"
+            />
+          </div>
+          <div className="min-w-0 flex-1">
+            <h3 className="truncate text-sm font-semibold text-foreground">
+              {provider.name}
+            </h3>
+            <div className="mt-0.5 flex items-center gap-1.5 text-xs text-muted-foreground">
+              <Star size={11} className="fill-foreground text-foreground" />
+              <span className="font-medium text-foreground">{provider.rating}</span>
+              <span>({provider.reviewCount} reviews)</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Actions */}
+      <div className="flex gap-2 border-t border-border p-3">
+        <button
+          onClick={onViewDetails}
+          className="flex h-11 flex-1 items-center justify-center rounded-xl border border-border text-sm font-medium text-foreground transition-colors hover:bg-accent/50"
+        >
+          View details
+        </button>
+        <button
+          onClick={onBook}
+          className="flex h-11 flex-1 items-center justify-center rounded-xl bg-foreground text-sm font-medium text-background transition-opacity hover:opacity-90"
+        >
+          Book now
+        </button>
+      </div>
+    </motion.div>
+  );
+}
+
 export default function HomePage() {
   const router = useRouter();
   const { addBooking, getUpcoming } = useBookings();
@@ -223,19 +403,11 @@ export default function HomePage() {
   const [confirmedBooking, setConfirmedBooking] = useState<Booking | null>(
     null
   );
-  const [promptIndex, setPromptIndex] = useState(0);
+  const [activeFlow, setActiveFlow] = useState<FlowConfig>(DEFAULT_FLOW);
 
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const chatEndRef = useRef<HTMLDivElement>(null);
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-  useEffect(() => {
-    if (step !== "idle") return;
-    const interval = setInterval(() => {
-      setPromptIndex((prev) => (prev + 1) % ROTATING_PROMPTS.length);
-    }, 3000);
-    return () => clearInterval(interval);
-  }, [step]);
 
   const scrollToBottom = useCallback(() => {
     setTimeout(
@@ -254,19 +426,34 @@ export default function HomePage() {
     setBestMatch(null);
     setSelectedProvider(null);
     setConfirmedBooking(null);
+    setActiveFlow(DEFAULT_FLOW);
   }, []);
+
+  const startFlow = useCallback(
+    (text: string) => {
+      const flow = FLOW_CONFIGS[text] ?? DEFAULT_FLOW;
+      setActiveFlow(flow);
+      setSubmittedQuery(text);
+      setQuery("");
+      setStep("searching");
+
+      timerRef.current = setTimeout(() => {
+        if (flow.skipBudget) {
+          if (flow.budgetPreset) setSelectedBudget(flow.budgetPreset);
+          setStep("ask-timing");
+        } else {
+          setStep("ask-budget");
+        }
+        scrollToBottom();
+      }, 1800);
+    },
+    [scrollToBottom]
+  );
 
   const handleSubmit = useCallback(() => {
     if (!query.trim()) return;
-    setSubmittedQuery(query.trim());
-    setQuery("");
-    setStep("searching");
-
-    timerRef.current = setTimeout(() => {
-      setStep("ask-budget");
-      scrollToBottom();
-    }, 1800);
-  }, [query, scrollToBottom]);
+    startFlow(query.trim());
+  }, [query, startFlow]);
 
   const handleStop = useCallback(() => {
     if (timerRef.current) {
@@ -275,6 +462,7 @@ export default function HomePage() {
     }
     setQuery(submittedQuery);
     setStep("idle");
+    setActiveFlow(DEFAULT_FLOW);
   }, [submittedQuery]);
 
   const handleSelectBudget = useCallback(
@@ -295,13 +483,13 @@ export default function HomePage() {
       scrollToBottom();
 
       timerRef.current = setTimeout(() => {
-        const results = getSearchResults();
+        const results = getSearchResults(activeFlow.providerCategory);
         setBestMatch(results[0] ?? null);
         setStep("best-match");
         scrollToBottom();
       }, 2000);
     },
-    [scrollToBottom]
+    [scrollToBottom, activeFlow.providerCategory]
   );
 
   const handleBookBestMatch = useCallback(() => {
@@ -332,9 +520,11 @@ export default function HomePage() {
   };
 
   const budgetLabel =
-    BUDGET_OPTIONS.find((o) => o.id === selectedBudget)?.label ?? "";
+    activeFlow.budgetPresetLabel ??
+    activeFlow.budgetOptions.find((o) => o.id === selectedBudget)?.label ??
+    "";
   const timingLabel =
-    TIMING_OPTIONS.find((o) => o.id === selectedTiming)?.label ?? "";
+    activeFlow.timingOptions.find((o) => o.id === selectedTiming)?.label ?? "";
 
   // ── Idle ──
   if (step === "idle") {
@@ -358,18 +548,10 @@ export default function HomePage() {
           <div className="mt-8 w-full">
             {/* Sample prompts */}
             <div className="-mx-5 mb-4 flex gap-2 overflow-x-auto px-5 no-scrollbar">
-              {ROTATING_PROMPTS.slice(0, 3).map((prompt) => (
+              {SAMPLE_PROMPTS.map((prompt) => (
                 <button
                   key={prompt}
-                  onClick={() => {
-                    setQuery(prompt);
-                    setSubmittedQuery(prompt);
-                    setStep("searching");
-                    timerRef.current = setTimeout(() => {
-                      setStep("ask-budget");
-                      scrollToBottom();
-                    }, 1800);
-                  }}
+                  onClick={() => startFlow(prompt)}
                   className="shrink-0 rounded-xl border border-border px-3.5 py-2 text-xs text-muted-foreground transition-colors hover:border-foreground/30 hover:text-foreground"
                 >
                   {prompt}
@@ -426,31 +608,37 @@ export default function HomePage() {
                 <p className="mb-2 text-xs font-medium text-muted-foreground">
                   Bookings
                 </p>
-                <Link
-                  href="/bookings"
-                  className="flex items-center gap-3 rounded-2xl border border-border p-3.5 transition-colors hover:bg-accent/40"
-                >
-                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-emerald-50">
-                    <CalendarCheck
-                      size={18}
-                      strokeWidth={1.5}
-                      className="text-emerald-600"
+                <div className="overflow-hidden rounded-2xl border border-border">
+                  <Link
+                    href="/bookings"
+                    className="flex items-center gap-3 p-3.5 transition-colors hover:bg-accent/40"
+                  >
+                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-emerald-50">
+                      <CalendarCheck
+                        size={18}
+                        strokeWidth={1.5}
+                        className="text-emerald-600"
+                      />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-sm font-semibold text-foreground">
+                        {latestBooking.providerName}
+                      </p>
+                      <p className="mt-0.5 truncate text-xs text-muted-foreground">
+                        {latestBooking.serviceSummary} ·{" "}
+                        {getRelativeDay(latestBooking.date)}
+                      </p>
+                    </div>
+                    <ChevronRight
+                      size={16}
+                      className="shrink-0 text-muted-foreground"
                     />
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <p className="truncate text-sm font-semibold text-foreground">
-                      {latestBooking.providerName}
-                    </p>
-                    <p className="mt-0.5 truncate text-xs text-muted-foreground">
-                      {latestBooking.serviceSummary} ·{" "}
-                      {getRelativeDay(latestBooking.date)}
-                    </p>
-                  </div>
-                  <ChevronRight
-                    size={16}
-                    className="shrink-0 text-muted-foreground"
-                  />
-                </Link>
+                  </Link>
+                  <button className="flex w-full items-center justify-center gap-1.5 border-t border-border py-2.5 text-xs font-medium text-muted-foreground transition-colors hover:bg-accent/40 hover:text-foreground">
+                    <CalendarPlus size={13} strokeWidth={1.5} />
+                    Add to calendar
+                  </button>
+                </div>
               </motion.div>
             )}
           </div>
@@ -461,7 +649,7 @@ export default function HomePage() {
 
   // ── Conversation flow ──
   const isSearching = step === "searching";
-  const showBudgetQ = step === "ask-budget" || (selectedBudget !== null && step !== "searching");
+  const showBudgetQ = !activeFlow.skipBudget && (step === "ask-budget" || (selectedBudget !== null && step !== "searching"));
   const showTimingQ = step === "ask-timing" || (selectedTiming !== null && step !== "searching" && step !== "ask-budget");
   const isFindingMatch = step === "finding-match";
   const showBestMatch = step === "best-match" || step === "booking" || step === "confirmed";
@@ -503,7 +691,7 @@ export default function HomePage() {
               {isSearching && (
                 <div className="space-y-2 pt-1">
                   <p className="shimmer-text text-sm font-medium text-muted-foreground">
-                    Searching service providers near you…
+                    {activeFlow.searchingMessage}
                   </p>
                   <div className="space-y-2">
                     {[1, 2].map((i) => (
@@ -525,8 +713,9 @@ export default function HomePage() {
 
               {!isSearching && (
                 <p className="text-sm leading-relaxed text-foreground">
-                  I found several providers in your area. Let me narrow it down
-                  for you.
+                  {activeFlow.skipBudget
+                    ? "I found several options near you. Let me help you pick a time."
+                    : "I found several providers in your area. Let me narrow it down for you."}
                 </p>
               )}
             </div>
@@ -564,7 +753,9 @@ export default function HomePage() {
               <PatchLogo size={28} className="shrink-0 text-foreground" />
               <div className="min-w-0 flex-1 space-y-2">
                 <p className="text-sm leading-relaxed text-foreground">
-                  What timing works for you?
+                  {activeFlow.skipBudget
+                    ? "What time works for you tomorrow morning?"
+                    : "What timing works for you?"}
                 </p>
                 {selectedTiming && (
                   <span className="inline-flex items-center gap-1 rounded-lg bg-accent px-2.5 py-1 text-xs font-medium text-foreground">
@@ -608,11 +799,17 @@ export default function HomePage() {
               <PatchLogo size={28} className="shrink-0 text-foreground" />
               <div className="min-w-0 flex-1 space-y-3">
                 <p className="text-sm leading-relaxed text-foreground">
-                  Based on your budget ({budgetLabel}) and timing ({timingLabel}
-                  ), here&apos;s your best match:
+                  {activeFlow.matchSummary(budgetLabel, timingLabel)}
                 </p>
 
-                {!showConfirmation && (
+                {!showConfirmation && activeFlow.cardVariant === "gallery" && (
+                  <PlumberMatchCard
+                    provider={bestMatch}
+                    onViewDetails={() => setSelectedProvider(bestMatch)}
+                    onBook={handleBookBestMatch}
+                  />
+                )}
+                {!showConfirmation && activeFlow.cardVariant === "default" && (
                   <BestMatchCard
                     provider={bestMatch}
                     onViewDetails={() => setSelectedProvider(bestMatch)}
@@ -685,12 +882,6 @@ export default function HomePage() {
                 </div>
 
                 <div className="flex gap-2">
-                  <Link
-                    href="/bookings"
-                    className="flex h-10 flex-1 items-center justify-center gap-1.5 rounded-xl bg-foreground text-sm font-semibold text-background transition-opacity hover:opacity-90"
-                  >
-                    Go to bookings
-                  </Link>
                   <button
                     onClick={() => {
                       const conv = getConversationByProviderId(
@@ -699,14 +890,24 @@ export default function HomePage() {
                       const draft = encodeURIComponent(
                         `Hi, I just booked ${confirmedBooking.serviceSummary.toLowerCase()} for ${confirmedBooking.date}. Looking forward to it!`
                       );
+                      const summary = encodeURIComponent(
+                        JSON.stringify({
+                          service: confirmedBooking.serviceSummary,
+                          provider: confirmedBooking.providerName,
+                          date: confirmedBooking.date,
+                          time: confirmedBooking.time,
+                          address: confirmedBooking.address,
+                          price: confirmedBooking.priceEstimate,
+                        })
+                      );
                       if (conv) {
-                        router.push(`/messages/${conv.id}?draft=${draft}`);
+                        router.push(`/messages/${conv.id}?draft=${draft}&booking=${summary}`);
                       } else {
                         const name = encodeURIComponent(
                           confirmedBooking.providerName
                         );
                         router.push(
-                          `/messages/new?providerName=${name}&draft=${draft}`
+                          `/messages/new?providerName=${name}&draft=${draft}&booking=${summary}`
                         );
                       }
                     }}
@@ -715,7 +916,17 @@ export default function HomePage() {
                     <MessageSquare size={14} strokeWidth={1.5} />
                     Message
                   </button>
+                  <Link
+                    href="/bookings"
+                    className="flex h-10 flex-1 items-center justify-center gap-1.5 rounded-xl bg-foreground text-sm font-semibold text-background transition-opacity hover:opacity-90"
+                  >
+                    Go to bookings
+                  </Link>
                 </div>
+                <button className="flex h-10 w-full items-center justify-center gap-1.5 rounded-xl border border-border text-sm font-medium text-muted-foreground transition-colors hover:bg-accent/40 hover:text-foreground">
+                  <CalendarPlus size={14} strokeWidth={1.5} />
+                  Add to calendar
+                </button>
               </div>
             </motion.div>
           )}
@@ -726,7 +937,7 @@ export default function HomePage() {
 
       {/* Question bottom sheet */}
       <AnimatePresence>
-        {step === "ask-budget" && !selectedBudget && (
+        {step === "ask-budget" && !selectedBudget && !activeFlow.skipBudget && (
           <motion.div
             key="budget-sheet"
             initial={{ y: "100%" }}
@@ -739,7 +950,7 @@ export default function HomePage() {
               Select a budget
             </p>
             <div className="mx-auto flex max-w-lg flex-col gap-2">
-              {BUDGET_OPTIONS.map((opt) => (
+              {activeFlow.budgetOptions.map((opt) => (
                 <button
                   key={opt.id}
                   onClick={() => handleSelectBudget(opt.id)}
@@ -764,10 +975,10 @@ export default function HomePage() {
             className="fixed inset-x-0 bottom-0 z-[65] rounded-t-2xl border-t border-border bg-background px-5 pb-[max(env(safe-area-inset-bottom),20px)] pt-5"
           >
             <p className="mb-4 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-              What timing works?
+              {activeFlow.skipBudget ? "Pick a time" : "What timing works?"}
             </p>
             <div className="mx-auto flex max-w-lg flex-col gap-2">
-              {TIMING_OPTIONS.map((opt) => (
+              {activeFlow.timingOptions.map((opt) => (
                 <button
                   key={opt.id}
                   onClick={() => handleSelectTiming(opt.id)}
@@ -825,6 +1036,7 @@ export default function HomePage() {
           <ProviderDetailSheet
             provider={selectedProvider}
             coverImage={COVER_IMAGES[0]}
+            portfolioImages={activeFlow.cardVariant === "gallery" ? PORTFOLIO_IMAGES : undefined}
             onClose={() => setSelectedProvider(null)}
             onBook={(provider, slot) => {
               setSelectedProvider(null);
