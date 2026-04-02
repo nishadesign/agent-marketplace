@@ -1,10 +1,17 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { Star } from "lucide-react";
 
 import type { Provider, AiRecommendationTag } from "@/types";
 import { cn } from "@/lib/utils";
+
+export const COVER_IMAGES = [
+  "/providers/plumber-sink.png",
+  "/providers/sink.png",
+  "/providers/pipes.png",
+];
 
 const categoryGradients: Record<string, string> = {
   plumbing: "from-blue-100 to-sky-200",
@@ -20,7 +27,8 @@ const categoryGradients: Record<string, string> = {
 interface ProviderCardProps {
   provider: Provider;
   variant?: "browse" | "search";
-  onClick?: (provider: Provider) => void;
+  index?: number;
+  onClick?: (provider: Provider, index: number) => void;
   onBook?: (provider: Provider) => void;
 }
 
@@ -34,12 +42,12 @@ function getEarliestSlot(provider: Provider): string | null {
   return null;
 }
 
-export function ProviderCard({ provider, variant = "browse", onClick, onBook }: ProviderCardProps) {
+export function ProviderCard({ provider, variant = "browse", index = 0, onClick, onBook }: ProviderCardProps) {
   const earliest = getEarliestSlot(provider);
   const gradient = categoryGradients[provider.category] ?? "from-gray-100 to-gray-200";
 
   if (variant === "search") {
-    return <SearchResultCard provider={provider} earliest={earliest} onClick={onClick} onBook={onBook} />;
+    return <SearchResultCard provider={provider} earliest={earliest} index={index} onClick={onClick} onBook={onBook} />;
   }
 
   return (
@@ -89,28 +97,29 @@ export function ProviderCard({ provider, variant = "browse", onClick, onBook }: 
 function SearchResultCard({
   provider,
   earliest,
+  index = 0,
   onClick,
   onBook,
 }: {
   provider: Provider;
   earliest: string | null;
-  onClick?: (provider: Provider) => void;
+  index?: number;
+  onClick?: (provider: Provider, index: number) => void;
   onBook?: (provider: Provider) => void;
 }) {
-  const gradient = categoryGradients[provider.category] ?? "from-gray-100 to-gray-200";
+  const coverImage = COVER_IMAGES[index % COVER_IMAGES.length];
 
   return (
     <div className="group w-[280px] shrink-0 rounded-2xl border border-border/60 bg-background text-left">
       <div className="relative">
-        <div
-          className={cn(
-            "flex h-[140px] w-full items-end rounded-t-2xl bg-gradient-to-br p-3",
-            gradient
-          )}
-        >
-          <span className="text-[11px] font-medium uppercase tracking-wider text-foreground/30">
-            {provider.category.replace("-", " ")}
-          </span>
+        <div className="relative h-[200px] w-full overflow-hidden rounded-t-2xl">
+          <Image
+            src={coverImage}
+            alt={provider.name}
+            fill
+            className="object-cover"
+            sizes="280px"
+          />
         </div>
         {provider.aiTag && (
           <span className="absolute left-3 top-3 rounded-full bg-foreground px-2.5 py-1 text-[10px] font-semibold text-background">
@@ -133,38 +142,10 @@ function SearchResultCard({
           </div>
         </div>
 
-        <p className="text-xs leading-relaxed text-muted-foreground line-clamp-2">
-          {provider.bio}
-        </p>
-
-        {provider.badges.length > 0 && (
-          <div className="flex flex-wrap gap-1.5">
-            {provider.badges.map((badge) => (
-              <span
-                key={badge}
-                className="rounded-full bg-accent px-2 py-0.5 text-[10px] font-medium capitalize text-foreground"
-              >
-                {badge === "background-checked" ? "Vetted" : badge}
-              </span>
-            ))}
-          </div>
-        )}
-
-        <div className="flex items-center justify-between">
-          <span className="text-sm font-semibold text-foreground">
-            {provider.priceRange}
-          </span>
-          {earliest && (
-            <span className="text-[11px] text-muted-foreground">
-              {earliest}
-            </span>
-          )}
-        </div>
-
         <div className="flex gap-2">
           <button
             type="button"
-            onClick={() => onClick?.(provider)}
+            onClick={() => onClick?.(provider, index)}
             className="flex h-10 flex-1 items-center justify-center rounded-xl border border-border text-xs font-medium text-foreground transition-colors hover:bg-accent/50"
           >
             View details

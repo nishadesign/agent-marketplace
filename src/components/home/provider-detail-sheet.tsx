@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Image from "next/image";
 import { motion } from "framer-motion";
 import {
   ArrowLeft,
@@ -25,6 +26,7 @@ export interface BookingSlotInfo {
 
 interface ProviderDetailSheetProps {
   provider: Provider;
+  coverImage: string;
   onClose: () => void;
   onBook: (provider: Provider, slot: BookingSlotInfo) => void;
 }
@@ -57,10 +59,9 @@ const badgeConfig: Record<TrustBadgeType, { icon: typeof Shield; label: string; 
   "background-checked": { icon: UserCheck, label: "Background checked", desc: "Identity and history verified" },
 };
 
-export function ProviderDetailSheet({ provider, onClose, onBook }: ProviderDetailSheetProps) {
+export function ProviderDetailSheet({ provider, coverImage, onClose, onBook }: ProviderDetailSheetProps) {
   const [selectedDay, setSelectedDay] = useState(0);
   const [selectedSlotId, setSelectedSlotId] = useState<string | null>(null);
-  const gradient = categoryGradients[provider.category] ?? "from-gray-100 to-gray-200";
 
   useEffect(() => {
     document.body.style.overflow = "hidden";
@@ -93,15 +94,15 @@ export function ProviderDetailSheet({ provider, onClose, onBook }: ProviderDetai
         >
           {/* Hero */}
           <div className="relative">
-            <div
-              className={cn(
-                "flex h-56 items-end rounded-t-3xl bg-gradient-to-br p-5",
-                gradient
-              )}
-            >
-              <span className="rounded-full bg-background/70 px-2.5 py-1 text-[11px] font-medium text-foreground/60 backdrop-blur-sm">
-                {provider.photos.length} photos
-              </span>
+            <div className="relative h-56 w-full overflow-hidden rounded-t-3xl">
+              <Image
+                src={coverImage}
+                alt={provider.name}
+                fill
+                className="object-cover"
+                sizes="(max-width: 512px) 100vw, 512px"
+                priority
+              />
             </div>
             <button
               onClick={onClose}
