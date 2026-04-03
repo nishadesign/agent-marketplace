@@ -13,10 +13,12 @@ import {
   MessageSquareText,
   StickyNote,
   CalendarCheck,
+  CalendarPlus,
   RotateCcw,
   X,
   Sparkles,
   Receipt,
+  Download,
 } from "lucide-react";
 
 import { useBookings } from "@/components/bookings-context";
@@ -150,9 +152,16 @@ function ReceiptCard({ receipt }: { receipt: ReceiptType }) {
         <div className="flex h-5 w-5 items-center justify-center rounded-md bg-foreground">
           <Receipt size={11} strokeWidth={2} className="text-background" />
         </div>
-        <h3 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+        <h3 className="flex-1 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
           Receipt
         </h3>
+        <button
+          type="button"
+          className="flex h-8 w-8 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+          aria-label="Download receipt"
+        >
+          <Download size={16} strokeWidth={1.5} />
+        </button>
       </div>
 
       <div className="space-y-2.5">
@@ -359,32 +368,41 @@ export default function BookingDetailPage({
 
       {/* Sticky bottom actions */}
       <div className="fixed bottom-0 left-0 right-0 z-30 border-t border-border bg-background/95 backdrop-blur-sm">
-        <div className="mx-auto flex max-w-lg gap-2 px-5 pb-[max(env(safe-area-inset-bottom),16px)] pt-3">
+        <div className="mx-auto flex max-w-lg flex-col gap-2 px-5 pb-[max(env(safe-area-inset-bottom),16px)] pt-3">
+          <div className="flex gap-2">
+            {!isCompleted && !isCancelled && (
+              <button className="flex h-12 flex-1 items-center justify-center gap-2 rounded-2xl border border-border text-sm font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-foreground">
+                <X size={16} strokeWidth={1.5} />
+                Cancel
+              </button>
+            )}
+
+            {!isCompleted && !isCancelled && (
+              <Link
+                href={`/messages/${booking.providerId}`}
+                className="flex h-12 flex-1 items-center justify-center gap-2 rounded-2xl bg-foreground text-sm font-medium text-background transition-opacity hover:opacity-90"
+              >
+                <MessageCircle size={16} strokeWidth={1.5} />
+                Message
+              </Link>
+            )}
+
+            {isCompleted && (
+              <Link
+                href={`/provider/${booking.providerId}`}
+                className="flex h-12 flex-1 items-center justify-center gap-2 rounded-2xl border border-border text-sm font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+              >
+                <RotateCcw size={15} strokeWidth={1.5} />
+                Book Again
+              </Link>
+            )}
+          </div>
+
           {!isCompleted && !isCancelled && (
-            <button className="flex h-12 flex-1 items-center justify-center gap-2 rounded-2xl border border-border text-sm font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-foreground">
-              <X size={16} strokeWidth={1.5} />
-              Cancel
+            <button className="flex h-10 w-full items-center justify-center gap-1.5 rounded-2xl border border-border text-sm font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-foreground">
+              <CalendarPlus size={14} strokeWidth={1.5} />
+              Add to calendar
             </button>
-          )}
-
-          {!isCompleted && !isCancelled && (
-            <Link
-              href={`/messages/${booking.providerId}`}
-              className="flex h-12 flex-1 items-center justify-center gap-2 rounded-2xl bg-foreground text-sm font-medium text-background transition-opacity hover:opacity-90"
-            >
-              <MessageCircle size={16} strokeWidth={1.5} />
-              Message
-            </Link>
-          )}
-
-          {isCompleted && (
-            <Link
-              href={`/provider/${booking.providerId}`}
-              className="flex h-12 flex-1 items-center justify-center gap-2 rounded-2xl border border-border text-sm font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
-            >
-              <RotateCcw size={15} strokeWidth={1.5} />
-              Book Again
-            </Link>
           )}
         </div>
       </div>

@@ -921,8 +921,8 @@ export function getProvidersByCategory(category: string): Provider[] {
   return providers.filter((p) => p.category === category);
 }
 
-export function getSearchResults(): Provider[] {
-  return providers.filter((p) => p.category === "plumbing").slice(0, 5);
+export function getSearchResults(category: string = "plumbing"): Provider[] {
+  return providers.filter((p) => p.category === category).slice(0, 5);
 }
 
 export function getMoreResults(): Provider[] {

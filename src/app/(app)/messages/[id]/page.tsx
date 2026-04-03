@@ -9,7 +9,7 @@ import { CalendarCheck, Clock, MapPin } from "lucide-react";
 
 import { getConversationById } from "@/data/messages";
 import { PatchLogo } from "@/components/patch-logo";
-import type { Message } from "@/types";
+import type { Message, BookingSummary } from "@/types";
 import { cn } from "@/lib/utils";
 
 function BookingSummaryCard({ message }: { message: Message }) {
@@ -97,15 +97,63 @@ export default function ConversationPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const inputRef = useRef<HTMLInputElement>(null);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
   const [inputValue, setInputValue] = useState("");
+  const [localMessages, setLocalMessages] = useState<Message[]>([]);
 
   const isNew = params.id === "new";
   const conversation = isNew ? null : getConversationById(params.id as string);
   const providerName =
     conversation?.providerName ?? searchParams.get("providerName") ?? "";
   const isClosed = conversation?.closed ?? false;
-  const messages = conversation?.messages ?? [];
   const draft = searchParams.get("draft");
+  const bookingParam = searchParams.get("booking");
+
+  let parsedBooking: BookingSummary | null = null;
+  if (bookingParam) {
+    try {
+      parsedBooking = JSON.parse(decodeURIComponent(bookingParam));
+    } catch {
+      /* ignore malformed param */
+    }
+  }
+
+  const bookingMessage: Message | null = parsedBooking
+    ? {
+        id: "booking-summary",
+        sender: "system",
+        text: "Booking confirmed",
+        timestamp: new Date().toLocaleTimeString("en-US", {
+          hour: "numeric",
+          minute: "2-digit",
+        }),
+        bookingSummary: parsedBooking,
+      }
+    : null;
+
+  const baseMessages = conversation?.messages ?? [];
+  const messages = [
+    ...(bookingMessage ? [bookingMessage] : []),
+    ...baseMessages,
+    ...localMessages,
+  ];
+
+  const handleSend = () => {
+    const text = inputValue.trim();
+    if (!text) return;
+    const newMsg: Message = {
+      id: `local-${Date.now()}`,
+      sender: "user",
+      text,
+      timestamp: new Date().toLocaleTimeString("en-US", {
+        hour: "numeric",
+        minute: "2-digit",
+      }),
+    };
+    setLocalMessages((prev) => [...prev, newMsg]);
+    setInputValue("");
+    setTimeout(() => messagesEndRef.current?.scrollIntoView({ behavior: "smooth" }), 100);
+  };
 
   useEffect(() => {
     if (draft) {
@@ -155,6 +203,7 @@ export default function ConversationPage() {
                 <ChatBubble message={msg} />
               </motion.div>
             ))}
+            <div ref={messagesEndRef} />
           </div>
         ) : (
           <div className="flex flex-1 items-center justify-center py-20">
@@ -180,10 +229,18 @@ export default function ConversationPage() {
               type="text"
               value={inputValue}
               onChange={(e) => setInputValue(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  e.preventDefault();
+                  handleSend();
+                }
+              }}
               placeholder="Type a message..."
               className="h-10 flex-1 rounded-full border border-border bg-muted/50 px-4 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-foreground/20"
             />
             <button
+              onClick={handleSend}
+              disabled={!inputValue.trim()}
               className={cn(
                 "flex h-10 w-10 shrink-0 items-center justify-center rounded-full transition-colors",
                 inputValue.trim()

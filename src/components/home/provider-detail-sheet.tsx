@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Image from "next/image";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import {
   ArrowLeft,
   Star,
@@ -27,6 +27,7 @@ export interface BookingSlotInfo {
 interface ProviderDetailSheetProps {
   provider: Provider;
   coverImage: string;
+  portfolioImages?: string[];
   onClose: () => void;
   onBook: (provider: Provider, slot: BookingSlotInfo) => void;
 }
@@ -59,10 +60,23 @@ const badgeConfig: Record<TrustBadgeType, { icon: typeof Shield; label: string; 
   "background-checked": { icon: UserCheck, label: "Background checked", desc: "Identity and history verified" },
 };
 
-export function ProviderDetailSheet({ provider, coverImage, onClose, onBook }: ProviderDetailSheetProps) {
+export function ProviderDetailSheet({ provider, coverImage, portfolioImages, onClose, onBook }: ProviderDetailSheetProps) {
   const [selectedDay, setSelectedDay] = useState(0);
   const [selectedSlotId, setSelectedSlotId] = useState<string | null>(null);
   const [expanded, setExpanded] = useState(false);
+  const [currentImage, setCurrentImage] = useState(0);
+
+  const hasCarousel = portfolioImages && portfolioImages.length > 1;
+
+  const paginateImage = (direction: number) => {
+    if (!portfolioImages) return;
+    setCurrentImage((prev) => {
+      const next = prev + direction;
+      if (next < 0) return 0;
+      if (next >= portfolioImages.length) return portfolioImages.length - 1;
+      return next;
+    });
+  };
 
   useEffect(() => {
     document.body.style.overflow = "hidden";
@@ -109,18 +123,61 @@ export function ProviderDetailSheet({ provider, coverImage, onClose, onBook }: P
               "relative h-56 w-full overflow-hidden transition-[border-radius] duration-300",
               expanded ? "rounded-none" : "rounded-t-3xl"
             )}>
-              <Image
-                src={coverImage}
-                alt={provider.name}
-                fill
-                className="object-cover"
-                sizes="(max-width: 512px) 100vw, 512px"
-                priority
-              />
+              {hasCarousel ? (
+                <>
+                  <AnimatePresence initial={false} mode="popLayout">
+                    <motion.div
+                      key={currentImage}
+                      initial={{ x: "100%" }}
+                      animate={{ x: 0 }}
+                      exit={{ x: "-100%" }}
+                      transition={{ type: "spring", damping: 26, stiffness: 260 }}
+                      drag="x"
+                      dragConstraints={{ left: 0, right: 0 }}
+                      dragElastic={0.12}
+                      onDragEnd={(_e, info) => {
+                        if (info.offset.x < -50) paginateImage(1);
+                        else if (info.offset.x > 50) paginateImage(-1);
+                      }}
+                      className="absolute inset-0"
+                    >
+                      <Image
+                        src={portfolioImages[currentImage]}
+                        alt={`${provider.name} photo ${currentImage + 1}`}
+                        fill
+                        className="object-cover"
+                        sizes="(max-width: 512px) 100vw, 512px"
+                        priority={currentImage === 0}
+                      />
+                    </motion.div>
+                  </AnimatePresence>
+                  <div className="absolute bottom-3 left-0 right-0 z-10 flex justify-center gap-1.5">
+                    {portfolioImages.map((_, i) => (
+                      <button
+                        key={i}
+                        onClick={() => setCurrentImage(i)}
+                        className={cn(
+                          "h-1.5 rounded-full transition-all",
+                          i === currentImage ? "w-4 bg-white" : "w-1.5 bg-white/50"
+                        )}
+                      />
+                    ))}
+                  </div>
+                </>
+              ) : (
+                <Image
+                  src={coverImage}
+                  alt={provider.name}
+                  fill
+                  className="object-cover"
+                  sizes="(max-width: 512px) 100vw, 512px"
+                  priority
+                />
+              )}
             </div>
             <button
               onClick={onClose}
-              className="absolute left-4 top-4 flex h-8 w-8 items-center justify-center rounded-full bg-background/80 backdrop-blur-sm transition-colors hover:bg-background"
+              className="absolute left-4 top-4 z-10 flex h-8 w-8 items-center justify-center rounded-full bg-background/80 backdrop-blur-sm transition-colors hover:bg-background"
             >
               <ArrowLeft size={16} />
             </button>
