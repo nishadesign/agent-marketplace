@@ -177,3 +177,98 @@
   -webkit-text-fill-color: transparent;
   animation: shimmer-sweep 4s ease-in-out infinite;
 }
+
+/* Landing page visual effects */
+
+@keyframes float-slow {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  33% { transform: translate(30px, -20px) scale(1.05); }
+  66% { transform: translate(-20px, 15px) scale(0.97); }
+}
+
+@keyframes float-slower {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  33% { transform: translate(-25px, 25px) scale(0.96); }
+  66% { transform: translate(20px, -30px) scale(1.04); }
+}
+
+@keyframes pulse-glow {
+  0%, 100% { opacity: 0.4; }
+  50% { opacity: 0.8; }
+}
+
+@keyframes code-glow {
+  0%, 100% { box-shadow: 0 0 20px rgba(132, 204, 22, 0.08), 0 0 60px rgba(132, 204, 22, 0.04); }
+  50% { box-shadow: 0 0 30px rgba(132, 204, 22, 0.15), 0 0 80px rgba(132, 204, 22, 0.08); }
+}
+
+.landing-orb {
+  border-radius: 50%;
+  filter: blur(80px);
+  pointer-events: none;
+  will-change: transform;
+}
+
+.landing-orb-1 {
+  animation: float-slow 20s ease-in-out infinite;
+}
+
+.landing-orb-2 {
+  animation: float-slower 25s ease-in-out infinite;
+}
+
+.landing-dot-grid {
+  background-image: radial-gradient(circle, rgba(0, 0, 0, 0.1) 1px, transparent 1px);
+  background-size: 24px 24px;
+}
+
+.landing-dot-grid-light {
+  background-image: radial-gradient(circle, rgba(255, 255, 255, 0.08) 1px, transparent 1px);
+  background-size: 24px 24px;
+}
+
+.landing-gradient-text {
+  background: linear-gradient(135deg, #7c3aed 0%, #a855f7 50%, #7c3aed 100%);
+  background-size: 200% 200%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: shimmer-sweep 6s ease-in-out infinite;
+}
+
+.landing-code-glow {
+  animation: code-glow 4s ease-in-out infinite;
+}
+
+@keyframes border-travel {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.landing-border-travel {
+  animation: border-travel 4s linear infinite;
+}
+
+.landing-heading {
+  font-family: "SF Pro Display", "SF Pro", -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+}
+
+/* Provider section — animated connection lines */
+@keyframes landing-connection-flow {
+  0% { stroke-dashoffset: 200; }
+  100% { stroke-dashoffset: 0; }
+}
+
+.landing-connection-line {
+  stroke-dasharray: 12 188;
+  animation: landing-connection-flow 4s linear infinite;
+}
+
+/* Syntax highlighting classes for developer code blocks */
+.clr-kw { color: rgba(192, 132, 252, 0.8); }
+.clr-var { color: rgba(255, 255, 255, 0.7); }
+.clr-op { color: rgba(255, 255, 255, 0.3); }
+.clr-dim { color: rgba(255, 255, 255, 0.45); }
+.clr-str { color: rgba(192, 132, 252, 0.9); }
+.clr-cmt { color: rgba(255, 255, 255, 0.3); }
+.clr-ok { color: rgba(192, 132, 252, 0.7); }
