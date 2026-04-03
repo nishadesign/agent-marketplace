@@ -28,7 +28,7 @@ alwaysApply: true
 - Responsive breakpoints: 640px (mobile), 768px (tablet), 1024px (desktop), 1280px (wide). Use Tailwind defaults only.
 
 ## Patterns
-
+- Optimize the experience for Mobile first. 
 - Toast notifications for success/error states. Position: bottom-right. Auto-dismiss after 4 seconds. Use sonner.
 - Forms: use react-hook-form + zod. Inline validation on blur. Error messages below the field, not in toasts or alerts.
 - Modals must have a clear close action (X button + click outside + Escape key). Never trap the user.

@@ -1,9 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Inter } from "next/font/google";
-import { Toaster } from "sonner";
 
-import { SideNav } from "@/components/layout/side-nav";
-import { BookingsProvider } from "@/components/bookings-context";
 import "./globals.css";
 
 const inter = Inter({
@@ -32,13 +29,7 @@ export default function RootLayout({
   return (
     <html lang="en" className={`${inter.variable} h-full antialiased`}>
       <body className="flex min-h-full flex-col bg-background font-sans text-foreground">
-        <BookingsProvider>
-          <main className="mx-auto flex w-full max-w-lg flex-1 flex-col">
-            {children}
-          </main>
-          <SideNav />
-          <Toaster position="top-center" richColors />
-        </BookingsProvider>
+        {children}
       </body>
     </html>
   );
