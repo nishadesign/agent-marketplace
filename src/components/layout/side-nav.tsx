@@ -12,6 +12,8 @@ import {
   MessageCircle,
   User,
   SquarePen,
+  Briefcase,
+  ArrowUpRight,
 } from "lucide-react";
 
 import { PatchLogo } from "@/components/patch-logo";
@@ -115,6 +117,22 @@ export function SideNav() {
                     </Link>
                   );
                 })}
+              </div>
+
+              {/* Become a provider */}
+              <div className="px-3 pb-4">
+                <div className="mb-3 border-t border-border" />
+                <a
+                  href="https://patch-agent-marketplace.vercel.app/landing"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  onClick={() => setOpen(false)}
+                  className="flex items-center gap-3 rounded-xl px-3 py-3 text-sm font-medium text-muted-foreground transition-colors hover:bg-accent/50 hover:text-foreground"
+                >
+                  <Briefcase size={20} strokeWidth={1.5} />
+                  <span className="flex-1">Become a provider</span>
+                  <ArrowUpRight size={16} strokeWidth={1.5} />
+                </a>
               </div>
 
               {/* Footer */}

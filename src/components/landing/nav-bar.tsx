@@ -9,7 +9,6 @@ import { PatchLogo } from "@/components/patch-logo";
 import { cn } from "@/lib/utils";
 
 const NAV_LINKS = [
-  { label: "Home", href: "#" },
   { label: "Providers", href: "#providers" },
   { label: "Developers", href: "#developers" },
 ];
