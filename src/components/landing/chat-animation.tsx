@@ -15,7 +15,7 @@ function stepAnim(visible: boolean) {
       opacity: visible ? 1 : 0,
       y: visible ? 0 : 6,
     },
-    transition: { duration: 0.4, ease: [0.25, 0.46, 0.45, 0.94] },
+    transition: { duration: 0.4, ease: [0.25, 0.46, 0.45, 0.94] as const },
   };
 }
 
