@@ -141,6 +141,23 @@
   }
 }
 
+/* Hide all scrollbars app-wide so the iPhone demo reads as a native, scroll-free surface */
+* {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+*::-webkit-scrollbar {
+  display: none;
+}
+
+/* Hide the Next.js dev tools / build indicator floating button (in addition to next.config devIndicators: false) */
+nextjs-dev-tools,
+nextjs-portal,
+[data-nextjs-toast],
+[data-nextjs-dev-tools-button] {
+  display: none !important;
+}
+
 @property --border-angle {
   syntax: "<angle>";
   inherits: false;
@@ -155,10 +172,10 @@
 
 @keyframes shimmer-sweep {
   0% {
-    background-position: -200% 0;
+    background-position: 200% 0;
   }
   100% {
-    background-position: 200% 0;
+    background-position: -200% 0;
   }
 }
 

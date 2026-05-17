@@ -17,5 +17,14 @@ export default function LandingLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  return <>{children}</>;
+  return (
+    <>
+      {/* Prevent white FOUC on refresh + enable section snap-scroll on the landing route */}
+      <style>{`
+        html,body{background-color:oklch(0.145 0 0);color-scheme:dark;}
+        html{scroll-snap-type:y mandatory;scroll-padding-top:5.25rem;scroll-behavior:smooth;}
+      `}</style>
+      {children}
+    </>
+  );
 }

@@ -1,5 +1,3 @@
-import { Toaster } from "sonner";
-
 import { SideNav } from "@/components/layout/side-nav";
 import { BookingsProvider } from "@/components/bookings-context";
 
@@ -14,7 +12,6 @@ export default function AppLayout({
         {children}
       </main>
       <SideNav />
-      <Toaster position="top-center" richColors />
     </BookingsProvider>
   );
 }

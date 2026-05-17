@@ -126,14 +126,16 @@ export function ProvidersSection() {
   return (
     <section
       id="providers"
-      className="relative overflow-hidden px-5 py-16 sm:px-8 md:py-20"
+      className="relative flex h-[calc(100dvh-5.25rem)] items-stretch px-5 pb-6 [scroll-snap-align:start] [scroll-snap-stop:always] sm:px-6"
       ref={ref}
     >
-      <div className="landing-dot-grid-light pointer-events-none absolute inset-0" />
-      <div className="pointer-events-none absolute -right-40 top-0 h-[500px] w-[500px] rounded-full bg-purple-500/[0.06] blur-[100px]" />
-      <div className="pointer-events-none absolute -left-40 bottom-0 h-[400px] w-[400px] rounded-full bg-violet-500/[0.04] blur-[100px]" />
+      <div className="relative mx-auto flex w-full max-w-7xl flex-1 flex-col justify-center overflow-hidden rounded-3xl border border-white/[0.12] bg-white/[0.06] px-6 py-10 shadow-[0_0_40px_rgba(168,85,247,0.06),0_8px_32px_rgba(0,0,0,0.3)] backdrop-blur-2xl sm:px-10">
+        {/* Soft glows */}
+        <div className="pointer-events-none absolute -right-40 -top-32 h-[500px] w-[500px] rounded-full bg-purple-500/[0.05] blur-[120px]" />
+        <div className="pointer-events-none absolute -left-40 -bottom-40 h-[420px] w-[420px] rounded-full bg-violet-500/[0.04] blur-[120px]" />
+        <div className="landing-dot-grid-light pointer-events-none absolute inset-0 z-[1]" />
 
-      <div className="relative mx-auto max-w-7xl">
+        <div className="relative z-[2] mx-auto w-full">
         {/* Heading */}
         <motion.h2
           initial={{ opacity: 0, y: 20 }}
@@ -213,6 +215,7 @@ export function ProvidersSection() {
           </div>
         </motion.div>
 
+        </div>
       </div>
     </section>
   );

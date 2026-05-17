@@ -8,6 +8,7 @@ import {
   Square,
   SquarePen,
   ChevronRight,
+  ChevronDown,
   Check,
   Clock,
   CalendarCheck,
@@ -17,14 +18,12 @@ import {
   Star,
   Shield,
   BadgeCheck,
+  X,
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
-import { toast } from "sonner";
 
 import { PatchLogo } from "@/components/patch-logo";
-import { ProviderDetailSheet } from "@/components/home/provider-detail-sheet";
-import { COVER_IMAGES } from "@/components/home/provider-card";
 import { useBookings } from "@/components/bookings-context";
 import { getSearchResults } from "@/data/providers";
 import { getConversationByProviderId } from "@/data/messages";
@@ -34,6 +33,8 @@ import { cn } from "@/lib/utils";
 type ConversationStep =
   | "idle"
   | "searching"
+  | "ask-issue"
+  | "thinking"
   | "ask-budget"
   | "ask-timing"
   | "finding-match"
@@ -43,9 +44,14 @@ type ConversationStep =
 
 interface FlowConfig {
   searchingMessage: string;
+  askIssue?: boolean;
+  issuePrompt?: string;
   skipBudget: boolean;
+  skipTiming?: boolean;
   budgetPreset?: string;
   budgetPresetLabel?: string;
+  timingPreset?: string;
+  timingPresetLabel?: string;
   budgetOptions: { id: string; label: string }[];
   timingOptions: { id: string; label: string }[];
   providerCategory: string;
@@ -54,7 +60,7 @@ interface FlowConfig {
 }
 
 const SAMPLE_PROMPTS = [
-  "Need a plumber tomorrow morning under $180",
+  "Need plumber tomorrow at 9AM",
   "Deep clean my 2BR apartment this weekend",
 ];
 
@@ -72,11 +78,15 @@ const DEFAULT_TIMING_OPTIONS = [
 ];
 
 const FLOW_CONFIGS: Record<string, FlowConfig> = {
-  "Need a plumber tomorrow morning under $180": {
-    searchingMessage: "Finding plumbers under $180 near you…",
+  "Need plumber tomorrow at 9AM": {
+    searchingMessage: "Finding plumbers available tomorrow at 9 AM…",
+    askIssue: true,
+    issuePrompt:
+      "Can you describe the issue you're looking for a plumber to fix?",
     skipBudget: true,
-    budgetPreset: "under-200",
-    budgetPresetLabel: "Under $180",
+    skipTiming: true,
+    timingPreset: "9am",
+    timingPresetLabel: "9 AM",
     budgetOptions: DEFAULT_BUDGET_OPTIONS,
     timingOptions: [
       { id: "8am", label: "8 AM" },
@@ -85,8 +95,7 @@ const FLOW_CONFIGS: Record<string, FlowConfig> = {
     ],
     providerCategory: "plumbing",
     cardVariant: "gallery",
-    matchSummary: (_budget, timing) =>
-      `Here's your best match for tomorrow at ${timing}:`,
+    matchSummary: () => `Here's your best match for tomorrow at 9 AM:`,
   },
   "Deep clean my 2BR apartment this weekend": {
     searchingMessage: "Finding top-rated cleaners near you…",
@@ -272,10 +281,12 @@ function PlumberMatchCard({
   provider,
   onViewDetails,
   onBook,
+  approveMode = false,
 }: {
   provider: Provider;
   onViewDetails: () => void;
   onBook: () => void;
+  approveMode?: boolean;
 }) {
   const [currentImage, setCurrentImage] = useState(0);
 
@@ -288,11 +299,20 @@ function PlumberMatchCard({
     });
   };
 
+  // Drag-pan vs tap: only treat as a tap when not dragging
+  const dragMovedRef = useRef(false);
+
   return (
-    <motion.div
+    <motion.button
+      type="button"
+      onClick={() => {
+        if (dragMovedRef.current) return;
+        onViewDetails();
+      }}
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
-      className="overflow-hidden rounded-2xl border border-border bg-background"
+      whileTap={approveMode ? { scale: 0.99 } : undefined}
+      className="block w-full overflow-hidden rounded-2xl border border-border bg-background text-left transition-shadow hover:shadow-sm"
     >
       {/* Swipeable image gallery */}
       <div className="relative aspect-[4/3] w-full overflow-hidden">
@@ -306,9 +326,15 @@ function PlumberMatchCard({
             drag="x"
             dragConstraints={{ left: 0, right: 0 }}
             dragElastic={0.12}
+            onDragStart={() => {
+              dragMovedRef.current = true;
+            }}
             onDragEnd={(_e, info) => {
               if (info.offset.x < -50) paginate(1);
               else if (info.offset.x > 50) paginate(-1);
+              setTimeout(() => {
+                dragMovedRef.current = false;
+              }, 0);
             }}
             className="absolute inset-0"
           >
@@ -328,7 +354,11 @@ function PlumberMatchCard({
           {PORTFOLIO_IMAGES.map((_, i) => (
             <button
               key={i}
-              onClick={() => setCurrentImage(i)}
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                setCurrentImage(i);
+              }}
               className={cn(
                 "h-1.5 rounded-full transition-all",
                 i === currentImage
@@ -366,22 +396,168 @@ function PlumberMatchCard({
         </div>
       </div>
 
-      {/* Actions */}
-      <div className="flex gap-2 border-t border-border p-3">
-        <button
-          onClick={onViewDetails}
-          className="flex h-11 flex-1 items-center justify-center rounded-xl border border-border text-sm font-medium text-foreground transition-colors hover:bg-accent/50"
-        >
-          View details
-        </button>
-        <button
-          onClick={onBook}
-          className="flex h-11 flex-1 items-center justify-center rounded-xl bg-foreground text-sm font-medium text-background transition-opacity hover:opacity-90"
-        >
-          Book now
-        </button>
+      {/* Non-approve flows still get inline actions inside the card */}
+      {!approveMode && (
+        <div className="flex gap-2 border-t border-border p-3">
+          <span
+            role="button"
+            tabIndex={0}
+            onClick={(e) => {
+              e.stopPropagation();
+              onViewDetails();
+            }}
+            className="flex h-11 flex-1 cursor-pointer items-center justify-center rounded-xl border border-border text-sm font-medium text-foreground transition-colors hover:bg-accent/50"
+          >
+            View details
+          </span>
+          <span
+            role="button"
+            tabIndex={0}
+            onClick={(e) => {
+              e.stopPropagation();
+              onBook();
+            }}
+            className="flex h-11 flex-1 cursor-pointer items-center justify-center rounded-xl bg-foreground text-sm font-medium text-background transition-opacity hover:opacity-90"
+          >
+            Book now
+          </span>
+        </div>
+      )}
+    </motion.button>
+  );
+}
+
+const ROTATING_STATUS_MESSAGES = [
+  "Calling plumbers near you",
+  "Checking availability for 9 AM",
+  "Found available plumbers",
+  "Waiting for confirmation",
+];
+
+function ServiceRequestCard({
+  issueDescription,
+  timing,
+}: {
+  issueDescription: string;
+  timing: string;
+}) {
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 8 }}
+      animate={{ opacity: 1, y: 0 }}
+      className="overflow-hidden rounded-2xl border border-border bg-background"
+    >
+      <div className="px-3.5 py-3">
+        <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+          Service request
+        </p>
+        <div className="mt-2 space-y-1.5">
+          <div className="flex items-baseline gap-2">
+            <span className="w-12 shrink-0 text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+              Issue
+            </span>
+            <span className="flex-1 text-sm leading-snug text-foreground">
+              {issueDescription}
+            </span>
+          </div>
+          <div className="flex items-baseline gap-2">
+            <span className="w-12 shrink-0 text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+              Time
+            </span>
+            <span className="flex-1 text-sm leading-snug text-foreground">
+              Tomorrow at {timing}
+            </span>
+          </div>
+        </div>
       </div>
     </motion.div>
+  );
+}
+
+function ThinkingStatus({
+  isDone,
+  duration,
+  statusIndex,
+  expanded,
+  onToggle,
+}: {
+  isDone: boolean;
+  duration: number;
+  statusIndex: number;
+  expanded: boolean;
+  onToggle: () => void;
+}) {
+  const currentStatus =
+    ROTATING_STATUS_MESSAGES[
+      Math.min(statusIndex, ROTATING_STATUS_MESSAGES.length - 1)
+    ];
+
+  // While thinking, just show the rotating line — no "Thinking…" header
+  if (!isDone) {
+    return (
+      <AnimatePresence mode="wait">
+        <motion.p
+          key={currentStatus}
+          initial={{ opacity: 0, y: 4 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -4 }}
+          transition={{ duration: 0.2 }}
+          className="shimmer-text text-sm font-medium leading-snug text-muted-foreground"
+        >
+          {currentStatus}
+        </motion.p>
+      </AnimatePresence>
+    );
+  }
+
+  // Done — show summary with chevron and the full list when expanded
+  return (
+    <div>
+      <button
+        onClick={onToggle}
+        className="flex items-center gap-1.5 text-left"
+      >
+        <span className="text-sm font-medium text-muted-foreground">
+          Thought for {duration}s
+        </span>
+        <ChevronDown
+          size={14}
+          strokeWidth={1.75}
+          className={cn(
+            "shrink-0 text-muted-foreground transition-transform",
+            expanded && "rotate-180"
+          )}
+        />
+      </button>
+
+      <AnimatePresence initial={false}>
+        {expanded && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: "auto", opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.25 }}
+            className="overflow-hidden"
+          >
+            <ul className="mt-2 space-y-1.5">
+              {ROTATING_STATUS_MESSAGES.map((msg) => (
+                <li
+                  key={msg}
+                  className="flex items-start gap-2 text-sm leading-snug text-muted-foreground"
+                >
+                  <Check
+                    size={14}
+                    strokeWidth={2}
+                    className="mt-0.5 shrink-0 text-muted-foreground/70"
+                  />
+                  <span>{msg}</span>
+                </li>
+              ))}
+            </ul>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
   );
 }
 
@@ -394,20 +570,24 @@ export default function HomePage() {
   const [step, setStep] = useState<ConversationStep>("idle");
   const [query, setQuery] = useState("");
   const [submittedQuery, setSubmittedQuery] = useState("");
+  const [issueDescription, setIssueDescription] = useState("");
   const [selectedBudget, setSelectedBudget] = useState<string | null>(null);
   const [selectedTiming, setSelectedTiming] = useState<string | null>(null);
   const [bestMatch, setBestMatch] = useState<Provider | null>(null);
-  const [selectedProvider, setSelectedProvider] = useState<Provider | null>(
-    null
-  );
   const [confirmedBooking, setConfirmedBooking] = useState<Booking | null>(
     null
   );
   const [activeFlow, setActiveFlow] = useState<FlowConfig>(DEFAULT_FLOW);
+  const [thinkingStatusIndex, setThinkingStatusIndex] = useState(0);
+  const [thinkingDone, setThinkingDone] = useState(false);
+  const [thinkingDuration, setThinkingDuration] = useState(0);
+  const [thinkingExpanded, setThinkingExpanded] = useState(true);
 
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const chatEndRef = useRef<HTMLDivElement>(null);
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const thinkingTimersRef = useRef<ReturnType<typeof setTimeout>[]>([]);
+
 
   const scrollToBottom = useCallback(() => {
     setTimeout(
@@ -418,15 +598,21 @@ export default function HomePage() {
 
   const handleReset = useCallback(() => {
     if (timerRef.current) clearTimeout(timerRef.current);
+    thinkingTimersRef.current.forEach((t) => clearTimeout(t));
+    thinkingTimersRef.current = [];
     setStep("idle");
     setQuery("");
     setSubmittedQuery("");
+    setIssueDescription("");
     setSelectedBudget(null);
     setSelectedTiming(null);
     setBestMatch(null);
-    setSelectedProvider(null);
     setConfirmedBooking(null);
     setActiveFlow(DEFAULT_FLOW);
+    setThinkingStatusIndex(0);
+    setThinkingDone(false);
+    setThinkingDuration(0);
+    setThinkingExpanded(true);
   }, []);
 
   const startFlow = useCallback(
@@ -434,12 +620,33 @@ export default function HomePage() {
       const flow = FLOW_CONFIGS[text] ?? DEFAULT_FLOW;
       setActiveFlow(flow);
       setSubmittedQuery(text);
+      setIssueDescription("");
       setQuery("");
-      setStep("searching");
 
+      if (flow.budgetPreset) setSelectedBudget(flow.budgetPreset);
+      if (flow.timingPreset) setSelectedTiming(flow.timingPreset);
+
+      // Issue-asking flow goes straight to the question — no searching skeleton, no intro line
+      if (flow.askIssue) {
+        setStep("ask-issue");
+        scrollToBottom();
+        return;
+      }
+
+      setStep("searching");
       timerRef.current = setTimeout(() => {
+        if (flow.skipBudget && flow.skipTiming) {
+          setStep("finding-match");
+          scrollToBottom();
+          timerRef.current = setTimeout(() => {
+            const results = getSearchResults(flow.providerCategory);
+            setBestMatch(results[0] ?? null);
+            setStep("best-match");
+            scrollToBottom();
+          }, 1600);
+          return;
+        }
         if (flow.skipBudget) {
-          if (flow.budgetPreset) setSelectedBudget(flow.budgetPreset);
           setStep("ask-timing");
         } else {
           setStep("ask-budget");
@@ -450,10 +657,71 @@ export default function HomePage() {
     [scrollToBottom]
   );
 
+  const handleSubmitIssue = useCallback(
+    (text: string) => {
+      setIssueDescription(text);
+      setQuery("");
+      setStep("thinking");
+      setThinkingStatusIndex(0);
+      setThinkingDone(false);
+      setThinkingDuration(0);
+      setThinkingExpanded(true);
+      scrollToBottom();
+
+      // Clear any prior thinking timers
+      thinkingTimersRef.current.forEach((t) => clearTimeout(t));
+      thinkingTimersRef.current = [];
+
+      // Rotate through 4 status messages, ~3s each, then reveal match
+      const stepDuration = 3000;
+      const timers: ReturnType<typeof setTimeout>[] = [];
+      for (let i = 1; i < 4; i++) {
+        timers.push(
+          setTimeout(() => {
+            setThinkingStatusIndex(i);
+          }, i * stepDuration)
+        );
+      }
+      timers.push(
+        setTimeout(() => {
+          setThinkingDone(true);
+          setThinkingExpanded(false);
+          const results = getSearchResults(activeFlow.providerCategory);
+          setBestMatch(results[0] ?? null);
+          setStep("best-match");
+          scrollToBottom();
+        }, 4 * stepDuration)
+      );
+
+      thinkingTimersRef.current = timers;
+    },
+    [scrollToBottom, activeFlow.providerCategory]
+  );
+
+  // Tick a 1s counter while in the thinking step
+  useEffect(() => {
+    if (step !== "thinking") return;
+    const interval = setInterval(() => {
+      setThinkingDuration((d) => d + 1);
+    }, 1000);
+    return () => clearInterval(interval);
+  }, [step]);
+
+  // Cleanup any pending thinking timers on unmount
+  useEffect(() => {
+    return () => {
+      thinkingTimersRef.current.forEach((t) => clearTimeout(t));
+    };
+  }, []);
+
   const handleSubmit = useCallback(() => {
     if (!query.trim()) return;
+    if (step === "ask-issue") {
+      handleSubmitIssue(query.trim());
+      return;
+    }
     startFlow(query.trim());
-  }, [query, startFlow]);
+  }, [query, step, startFlow, handleSubmitIssue]);
 
   const handleStop = useCallback(() => {
     if (timerRef.current) {
@@ -504,13 +772,10 @@ export default function HomePage() {
       start: slot.start,
       end: slot.end,
     }, submittedQuery);
-    toast.success("Booking confirmed!", {
-      description: `${bestMatch.name} · ${day.dayLabel} ${slot.start}`,
-    });
     setConfirmedBooking(booking);
     setStep("confirmed");
     scrollToBottom();
-  }, [bestMatch, addBooking, scrollToBottom]);
+  }, [bestMatch, addBooking, scrollToBottom, submittedQuery]);
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === "Enter" && !e.shiftKey) {
@@ -656,12 +921,12 @@ export default function HomePage() {
     <div className="fixed inset-0 z-[60] mx-auto flex w-full max-w-lg flex-col bg-background">
       <button
         onClick={handleReset}
-        className="fixed right-4 top-[max(env(safe-area-inset-top),16px)] z-[70] flex h-10 w-10 items-center justify-center rounded-full border border-white/60 bg-white/45 shadow-[0_4px_24px_rgba(0,0,0,0.12),0_1px_4px_rgba(0,0,0,0.06),inset_0_1px_0_rgba(255,255,255,0.7)] backdrop-blur-2xl transition-all hover:bg-white/60 hover:shadow-[0_6px_28px_rgba(0,0,0,0.16),0_2px_6px_rgba(0,0,0,0.08),inset_0_1px_0_rgba(255,255,255,0.8)]"
+        className="fixed right-4 top-[max(env(safe-area-inset-top),60px)] z-[70] flex h-12 w-12 items-center justify-center rounded-full text-foreground transition-opacity hover:opacity-70"
       >
-        <SquarePen size={18} strokeWidth={1.5} />
+        <SquarePen size={20} strokeWidth={1.5} />
       </button>
 
-      <div className="shrink-0 h-[calc(max(env(safe-area-inset-top),16px)+48px)]" />
+      <div className="shrink-0 h-[calc(max(env(safe-area-inset-top),60px)+56px)]" />
 
       <div
         className="flex-1 overflow-y-auto overflow-x-hidden overscroll-contain px-5 pb-4"
@@ -677,46 +942,113 @@ export default function HomePage() {
             </div>
           </div>
 
-          {/* Step 1: Searching */}
-          <motion.div
-            initial={{ opacity: 0, y: 8 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="flex gap-2.5"
-          >
-            <PatchLogo size={28} className="shrink-0 text-foreground" />
-            <div className="min-w-0 flex-1 space-y-3">
-              {isSearching && (
-                <div className="space-y-2 pt-1">
-                  <p className="shimmer-text text-sm font-medium text-muted-foreground">
-                    {activeFlow.searchingMessage}
-                  </p>
-                  <div className="space-y-2">
-                    {[1, 2].map((i) => (
-                      <motion.div
-                        key={i}
-                        initial={{ opacity: 0.4 }}
-                        animate={{ opacity: [0.4, 0.7, 0.4] }}
-                        transition={{
-                          repeat: Infinity,
-                          duration: 1.5,
-                          delay: i * 0.2,
-                        }}
-                        className="h-12 rounded-xl bg-accent/60"
-                      />
-                    ))}
+          {/* Step 1: Searching — skipped entirely when the flow asks about the issue first */}
+          {!activeFlow.askIssue && (
+            <motion.div
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="flex gap-2.5"
+            >
+              <PatchLogo size={28} className="shrink-0 text-foreground" />
+              <div className="min-w-0 flex-1 space-y-3">
+                {isSearching && (
+                  <div className="space-y-2 pt-1">
+                    <p className="shimmer-text text-sm font-medium text-muted-foreground">
+                      {activeFlow.searchingMessage}
+                    </p>
+                    <div className="space-y-2">
+                      {[1, 2].map((i) => (
+                        <motion.div
+                          key={i}
+                          initial={{ opacity: 0.4 }}
+                          animate={{ opacity: [0.4, 0.7, 0.4] }}
+                          transition={{
+                            repeat: Infinity,
+                            duration: 1.5,
+                            delay: i * 0.2,
+                          }}
+                          className="h-12 rounded-xl bg-accent/60"
+                        />
+                      ))}
+                    </div>
                   </div>
-                </div>
-              )}
+                )}
 
-              {!isSearching && (
-                <p className="text-sm leading-relaxed text-foreground">
-                  {activeFlow.skipBudget
-                    ? "I found several options near you. Let me help you pick a time."
-                    : "I found several providers in your area. Let me narrow it down for you."}
+                {!isSearching && (
+                  <p className="text-sm leading-relaxed text-foreground">
+                    {activeFlow.skipBudget && activeFlow.skipTiming
+                      ? "I found several options near you. Picking the best match for you."
+                      : activeFlow.skipBudget
+                      ? "I found several options near you. Let me help you pick a time."
+                      : "I found several providers in your area. Let me narrow it down for you."}
+                  </p>
+                )}
+              </div>
+            </motion.div>
+          )}
+
+          {/* Issue question — appears once we move past searching */}
+          {activeFlow.askIssue &&
+            (step === "ask-issue" ||
+              step === "thinking" ||
+              step === "finding-match" ||
+              step === "best-match" ||
+              step === "booking" ||
+              step === "confirmed") && (
+              <motion.div
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="flex gap-2.5"
+              >
+                <PatchLogo size={28} className="shrink-0 text-foreground" />
+                <div className="min-w-0 flex-1 space-y-2">
+                  <p className="text-sm leading-relaxed text-foreground">
+                    {activeFlow.issuePrompt}
+                  </p>
+                </div>
+              </motion.div>
+            )}
+
+          {/* User's issue reply */}
+          {activeFlow.askIssue && issueDescription && (
+            <motion.div
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="flex justify-end"
+            >
+              <div className="max-w-[85%] rounded-2xl rounded-br-md bg-blue-50 px-4 py-2.5">
+                <p className="text-sm leading-relaxed text-blue-900">
+                  {issueDescription}
                 </p>
-              )}
-            </div>
-          </motion.div>
+              </div>
+            </motion.div>
+          )}
+
+          {/* Service request card + inline thinking text — appear after the user describes the issue */}
+          {activeFlow.askIssue &&
+            issueDescription &&
+            (step === "thinking" || thinkingDone) && (
+              <motion.div
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="flex gap-2.5"
+              >
+                <PatchLogo size={28} className="shrink-0 text-foreground" />
+                <div className="min-w-0 flex-1 space-y-3">
+                  <ServiceRequestCard
+                    issueDescription={issueDescription}
+                    timing={activeFlow.timingPresetLabel ?? "Tomorrow"}
+                  />
+                  <ThinkingStatus
+                    isDone={thinkingDone}
+                    duration={thinkingDuration}
+                    statusIndex={thinkingStatusIndex}
+                    expanded={thinkingExpanded}
+                    onToggle={() => setThinkingExpanded((v) => !v)}
+                  />
+                </div>
+              </motion.div>
+            )}
 
           {/* Step 2: Budget question */}
           {showBudgetQ && (
@@ -741,7 +1073,7 @@ export default function HomePage() {
           )}
 
           {/* Step 3: Timing question */}
-          {showTimingQ && (
+          {showTimingQ && !activeFlow.skipBudget && (
             <motion.div
               initial={{ opacity: 0, y: 8 }}
               animate={{ opacity: 1, y: 0 }}
@@ -750,9 +1082,7 @@ export default function HomePage() {
               <PatchLogo size={28} className="shrink-0 text-foreground" />
               <div className="min-w-0 flex-1 space-y-2">
                 <p className="text-sm leading-relaxed text-foreground">
-                  {activeFlow.skipBudget
-                    ? "What time works for you tomorrow morning?"
-                    : "What timing works for you?"}
+                  What timing works for you?
                 </p>
                 {selectedTiming && (
                   <span className="inline-flex items-center gap-1 rounded-lg bg-accent px-2.5 py-1 text-xs font-medium text-foreground">
@@ -764,8 +1094,8 @@ export default function HomePage() {
             </motion.div>
           )}
 
-          {/* Step 4: Finding match */}
-          {isFindingMatch && (
+          {/* Step 4: Finding match — skipped when the thinking card runs the show */}
+          {isFindingMatch && !activeFlow.askIssue && (
             <motion.div
               initial={{ opacity: 0, y: 8 }}
               animate={{ opacity: 1, y: 0 }}
@@ -796,20 +1126,45 @@ export default function HomePage() {
               <PatchLogo size={28} className="shrink-0 text-foreground" />
               <div className="min-w-0 flex-1 space-y-3">
                 <p className="text-sm leading-relaxed text-foreground">
-                  {activeFlow.matchSummary(budgetLabel, timingLabel)}
+                  {activeFlow.askIssue
+                    ? `${bestMatch.ownerName.split(" ")[0]} confirmed your request. Approve to lock it in.`
+                    : activeFlow.matchSummary(budgetLabel, timingLabel)}
                 </p>
 
                 {!showConfirmation && activeFlow.cardVariant === "gallery" && (
-                  <PlumberMatchCard
-                    provider={bestMatch}
-                    onViewDetails={() => setSelectedProvider(bestMatch)}
-                    onBook={handleBookBestMatch}
-                  />
+                  <>
+                    <PlumberMatchCard
+                      provider={bestMatch}
+                      approveMode={activeFlow.askIssue}
+                      onViewDetails={() =>
+                        router.push(`/provider/${bestMatch.id}?gallery=1`)
+                      }
+                      onBook={handleBookBestMatch}
+                    />
+                    {activeFlow.askIssue && (
+                      <div className="flex gap-2 pt-1">
+                        <button
+                          onClick={handleReset}
+                          className="flex h-11 flex-1 items-center justify-center gap-1.5 rounded-xl border border-border text-sm font-medium text-foreground transition-colors hover:bg-accent/50"
+                        >
+                          <X size={14} strokeWidth={1.75} />
+                          Cancel
+                        </button>
+                        <button
+                          onClick={handleBookBestMatch}
+                          className="flex h-11 flex-1 items-center justify-center gap-1.5 rounded-xl bg-foreground text-sm font-medium text-background transition-opacity hover:opacity-90"
+                        >
+                          <Check size={14} strokeWidth={2} />
+                          Approve
+                        </button>
+                      </div>
+                    )}
+                  </>
                 )}
                 {!showConfirmation && activeFlow.cardVariant === "default" && (
                   <BestMatchCard
                     provider={bestMatch}
-                    onViewDetails={() => setSelectedProvider(bestMatch)}
+                    onViewDetails={() => router.push(`/provider/${bestMatch.id}`)}
                     onBook={handleBookBestMatch}
                   />
                 )}
@@ -936,12 +1291,22 @@ export default function HomePage() {
       <AnimatePresence>
         {step === "ask-budget" && !selectedBudget && !activeFlow.skipBudget && (
           <motion.div
+            key="budget-backdrop"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            className="fixed inset-0 z-[75] bg-black/40"
+          />
+        )}
+        {step === "ask-budget" && !selectedBudget && !activeFlow.skipBudget && (
+          <motion.div
             key="budget-sheet"
             initial={{ y: "100%" }}
             animate={{ y: 0 }}
             exit={{ y: "100%" }}
             transition={{ type: "spring", damping: 28, stiffness: 300 }}
-            className="fixed inset-x-0 bottom-0 z-[65] rounded-t-2xl border-t border-border bg-background px-5 pb-[max(env(safe-area-inset-bottom),20px)] pt-5"
+            className="fixed inset-x-0 bottom-0 z-[80] rounded-t-2xl border-t border-border bg-background px-5 pb-[max(env(safe-area-inset-bottom),20px)] pt-5"
           >
             <p className="mb-4 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
               Select a budget
@@ -964,12 +1329,22 @@ export default function HomePage() {
       <AnimatePresence>
         {step === "ask-timing" && !selectedTiming && (
           <motion.div
+            key="timing-backdrop"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            className="fixed inset-0 z-[75] bg-black/40"
+          />
+        )}
+        {step === "ask-timing" && !selectedTiming && (
+          <motion.div
             key="timing-sheet"
             initial={{ y: "100%" }}
             animate={{ y: 0 }}
             exit={{ y: "100%" }}
             transition={{ type: "spring", damping: 28, stiffness: 300 }}
-            className="fixed inset-x-0 bottom-0 z-[65] rounded-t-2xl border-t border-border bg-background px-5 pb-[max(env(safe-area-inset-bottom),20px)] pt-5"
+            className="fixed inset-x-0 bottom-0 z-[80] rounded-t-2xl border-t border-border bg-background px-5 pb-[max(env(safe-area-inset-bottom),20px)] pt-5"
           >
             <p className="mb-4 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
               {activeFlow.skipBudget ? "Pick a time" : "What timing works?"}
@@ -991,16 +1366,26 @@ export default function HomePage() {
 
       {/* Bottom input bar — hidden during questions */}
       {step !== "ask-budget" && step !== "ask-timing" && (
-        <div className="shrink-0 bg-background px-5 pb-[max(env(safe-area-inset-bottom),16px)] pt-2">
-          <div className="flex items-end gap-2 rounded-2xl border border-border bg-accent/30 px-3 py-2">
+        <div className="shrink-0 bg-background px-5 pb-[max(env(safe-area-inset-bottom),32px)]">
+          <div className="flex items-center gap-2 rounded-2xl border border-border bg-accent/30 px-3 py-1.5">
             <textarea
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              onKeyDown={isSearching ? undefined : handleKeyDown}
-              placeholder={isSearching ? "Searching..." : "Ask a follow-up..."}
+              onKeyDown={
+                isSearching || step === "thinking" ? undefined : handleKeyDown
+              }
+              placeholder={
+                isSearching
+                  ? "Searching..."
+                  : step === "ask-issue"
+                  ? "Describe the issue…"
+                  : step === "thinking"
+                  ? "Thinking..."
+                  : "Ask a follow-up..."
+              }
               rows={1}
-              disabled={isSearching}
-              className="flex-1 resize-none bg-transparent text-sm leading-relaxed text-foreground placeholder:text-muted-foreground focus:outline-none disabled:opacity-50"
+              disabled={isSearching || step === "thinking"}
+              className="flex-1 resize-none bg-transparent py-0 text-sm leading-7 text-foreground placeholder:text-muted-foreground focus:outline-none disabled:opacity-50"
             />
             {isSearching ? (
               <button
@@ -1027,27 +1412,6 @@ export default function HomePage() {
         </div>
       )}
 
-      {/* Provider detail sheet */}
-      <AnimatePresence>
-        {selectedProvider && (
-          <ProviderDetailSheet
-            provider={selectedProvider}
-            coverImage={COVER_IMAGES[0]}
-            portfolioImages={activeFlow.cardVariant === "gallery" ? PORTFOLIO_IMAGES : undefined}
-            onClose={() => setSelectedProvider(null)}
-            onBook={(provider, slot) => {
-              setSelectedProvider(null);
-              const booking = addBooking(provider, slot, submittedQuery);
-              toast.success("Booking confirmed!", {
-                description: `${provider.name} · ${slot.dayLabel} ${slot.start}`,
-              });
-              setConfirmedBooking(booking);
-              setStep("confirmed");
-              scrollToBottom();
-            }}
-          />
-        )}
-      </AnimatePresence>
     </div>
   );
 }

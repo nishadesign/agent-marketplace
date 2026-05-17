@@ -36,23 +36,29 @@ export function SideNav() {
     return pathname.startsWith(href);
   }
 
+  // Hide top triggers on routes that have their own back button or full-screen header
+  const hideTopTriggers =
+    pathname?.startsWith("/provider/") || pathname?.startsWith("/messages");
+
   return (
     <>
       {/* Menu trigger */}
-      <button
-        onClick={() => setOpen(true)}
-        className="fixed left-4 top-[max(env(safe-area-inset-top),16px)] z-[70] flex h-10 w-10 items-center justify-center rounded-full border border-white/60 bg-white/45 shadow-[0_4px_24px_rgba(0,0,0,0.12),0_1px_4px_rgba(0,0,0,0.06),inset_0_1px_0_rgba(255,255,255,0.7)] backdrop-blur-2xl transition-all hover:bg-white/60 hover:shadow-[0_6px_28px_rgba(0,0,0,0.16),0_2px_6px_rgba(0,0,0,0.08),inset_0_1px_0_rgba(255,255,255,0.8)]"
-      >
-        <Menu size={20} strokeWidth={1.5} />
-      </button>
+      {!hideTopTriggers && (
+        <button
+          onClick={() => setOpen(true)}
+          className="side-nav-menu-trigger fixed left-4 top-[max(env(safe-area-inset-top),60px)] z-[70] flex h-12 w-12 items-center justify-center rounded-full text-foreground transition-opacity hover:opacity-70"
+        >
+          <Menu size={22} strokeWidth={1.5} />
+        </button>
+      )}
 
-      {/* New chat button — visible on all pages except home */}
-      {pathname !== "/" && (
+      {/* New chat button — visible on all pages except home and provider detail */}
+      {pathname !== "/" && !hideTopTriggers && (
         <Link
           href="/"
-          className="fixed right-4 top-[max(env(safe-area-inset-top),16px)] z-[70] flex h-10 w-10 items-center justify-center rounded-full border border-white/60 bg-white/45 shadow-[0_4px_24px_rgba(0,0,0,0.12),0_1px_4px_rgba(0,0,0,0.06),inset_0_1px_0_rgba(255,255,255,0.7)] backdrop-blur-2xl transition-all hover:bg-white/60 hover:shadow-[0_6px_28px_rgba(0,0,0,0.16),0_2px_6px_rgba(0,0,0,0.08),inset_0_1px_0_rgba(255,255,255,0.8)]"
+          className="fixed right-4 top-[max(env(safe-area-inset-top),60px)] z-[70] flex h-12 w-12 items-center justify-center rounded-full text-foreground transition-opacity hover:opacity-70"
         >
-          <SquarePen size={18} strokeWidth={1.5} />
+          <SquarePen size={20} strokeWidth={1.5} />
         </Link>
       )}
 
@@ -80,8 +86,8 @@ export function SideNav() {
             transition={{ type: "spring", damping: 30, stiffness: 300 }}
             className="fixed inset-y-0 left-0 z-[100] flex w-72 flex-col bg-background shadow-2xl"
           >
-              {/* Header */}
-              <div className="flex items-center justify-between px-5 pt-[max(env(safe-area-inset-top),16px)] pb-2">
+              {/* Header — pushed below the Dynamic Island */}
+              <div className="flex items-center justify-between px-5 pt-[max(env(safe-area-inset-top),60px)] pb-2">
                 <div className="flex items-center gap-2.5">
                   <PatchLogo size={28} className="text-foreground" />
                   <span className="text-base font-semibold tracking-tight">

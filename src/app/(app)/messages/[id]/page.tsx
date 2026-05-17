@@ -96,9 +96,12 @@ export default function ConversationPage() {
   const params = useParams();
   const router = useRouter();
   const searchParams = useSearchParams();
+  const draft = searchParams.get("draft");
   const inputRef = useRef<HTMLInputElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const [inputValue, setInputValue] = useState("");
+  const [inputValue, setInputValue] = useState(() =>
+    draft ? decodeURIComponent(draft) : ""
+  );
   const [localMessages, setLocalMessages] = useState<Message[]>([]);
 
   const isNew = params.id === "new";
@@ -106,7 +109,6 @@ export default function ConversationPage() {
   const providerName =
     conversation?.providerName ?? searchParams.get("providerName") ?? "";
   const isClosed = conversation?.closed ?? false;
-  const draft = searchParams.get("draft");
   const bookingParam = searchParams.get("booking");
 
   let parsedBooking: BookingSummary | null = null;
@@ -157,7 +159,6 @@ export default function ConversationPage() {
 
   useEffect(() => {
     if (draft) {
-      setInputValue(decodeURIComponent(draft));
       setTimeout(() => inputRef.current?.focus(), 300);
     }
   }, [draft]);

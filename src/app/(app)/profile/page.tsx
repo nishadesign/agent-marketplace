@@ -52,7 +52,8 @@ export default function ProfilePage() {
   }
 
   return (
-    <div className="flex flex-1 flex-col px-4 pt-20">
+    <div className="flex flex-1 flex-col px-4 pt-[max(env(safe-area-inset-top),60px)]">
+      <div className="h-14" />
       <h1 className="text-2xl font-semibold tracking-tight">Profile</h1>
       <p className="mt-1 text-sm text-muted-foreground">
         Manage your account and preferences.

@@ -233,7 +233,8 @@ export default function BookingsPage() {
   const past = getPast();
 
   return (
-    <div className="flex flex-1 flex-col px-5 pt-20 pb-20">
+    <div className="flex flex-1 flex-col px-5 pt-[max(env(safe-area-inset-top),60px)] pb-20">
+      <div className="h-14" />
       <h1 className="text-2xl font-semibold tracking-tight">Bookings</h1>
       <p className="mt-1 text-sm text-muted-foreground">
         Your upcoming and past services.
